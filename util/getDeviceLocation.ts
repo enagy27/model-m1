@@ -1,20 +1,9 @@
 import dgram from "dgram";
-import { XMLParser } from "fast-xml-parser";
-import * as v from "valibot";
 
 import { upnp } from "./upnp";
 
 const UPNP_ADDRESS = "239.255.255.250" as const;
 const UPNP_PORT = 1900 as const;
-
-const deviceXmlSchema = v.object({
-  root: v.object({
-    device: v.object({
-      manufacturer: v.string(),
-      modelName: v.string(),
-    }),
-  }),
-});
 
 export type DeviceData = {
   manufacturer: string;
@@ -22,8 +11,6 @@ export type DeviceData = {
 };
 
 export async function getDeviceLocation(service: string): Promise<string> {
-  const xml = new XMLParser();
-
   const upnpSocket = dgram.createSocket({ type: "udp4", reuseAddr: true });
   const upnpClient = upnp({
     host: `${UPNP_ADDRESS}:${UPNP_PORT}`,

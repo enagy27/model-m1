@@ -51,6 +51,7 @@ async function main({ deviceFriendlyName }: MainArgs) {
   const timeout = 5_000;
   const upnpService = "urn:schemas-denon-com:service:ACT:1";
 
+  // const location = "http://192.168.4.55:60006/upnp/desc/aios_device/aios_device.xml";
   const location = await awaitAtMost(getDeviceLocation(upnpService), timeout);
   const aiosDevice = await awaitAtMost(getAiosDevice(location), timeout);
 
@@ -68,9 +69,20 @@ async function main({ deviceFriendlyName }: MainArgs) {
   });
 
   socket.connect(Number(port), hostname, () => {
-    controller()
+    controller("SetAudioConfig", {
+      AudioConfig: {
+        AudioConfig: {
+          digitalFilter: "FILTER_1",
+          lowpass: 120,
+        }
+      }
+    })
       .then(() => console.log("commanded"))
-      .catch(() => console.error("failed to command"));
+      .catch((err) => console.error("failed to command", err));
+  });
+
+  socket.on("data", (message) => {
+    console.log(message.toString());
   });
 }
 
