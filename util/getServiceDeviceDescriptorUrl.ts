@@ -1,20 +1,26 @@
 import dgram from "dgram";
 
 import { upnp } from "./upnp";
-
-const UPNP_ADDRESS = "239.255.255.250" as const;
-const UPNP_PORT = 1900 as const;
+import { upnpAddress, upnpPort } from "../env";
 
 export type DeviceData = {
   manufacturer: string;
   modelName: string;
 };
-
-export async function getDeviceLocation(service: string): Promise<string> {
+/**
+ * Returns the first UPNP registered service location which matches the provided service
+ * name.
+ * 
+ * @example http://192.168.4.55:60006/upnp/desc/aios_device/aios_device.xml
+ * 
+ * @param service the service to search for
+ * @returns UPNP device information XML file endpoint
+ */
+export async function getServiceDeviceDescriptorUrl(service: string): Promise<string> {
   const upnpSocket = dgram.createSocket({ type: "udp4", reuseAddr: true });
   const upnpClient = upnp({
-    host: `${UPNP_ADDRESS}:${UPNP_PORT}`,
-    send: (message) => upnpSocket.send(message, UPNP_PORT, UPNP_ADDRESS),
+    host: `${upnpAddress}:${upnpPort}`,
+    send: (message) => upnpSocket.send(message, upnpPort, upnpAddress),
   });
 
   return new Promise((resolve, reject) => {
