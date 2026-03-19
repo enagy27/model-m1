@@ -1,8 +1,6 @@
 import * as v from "valibot";
 import qs from "qs";
 
-export const HEOS_PORT = 1255 as const;
-
 type ISocket = {
   write(address: string): void;
 };

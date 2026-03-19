@@ -1,47 +1,12 @@
 #!/usr/bin/env node
 
 import net from "net";
-import { HeosInstance } from "./util/heos";
 import { awaitAtMost } from "./util/async";
-import { getDeviceLocation } from "./util/getDeviceLocation";
+import { getServiceDeviceDescriptorUrl } from "./util/getServiceDeviceDescriptorUrl";
 import { getAiosDevice } from "./util/getAiosDevice";
-import { ensureArray } from "./util/array";
 import { findService } from "./util/findService";
 import { control } from "./util/control";
-
-function heosListener(socket: net.Socket, client: HeosInstance) {
-  socket.on("data", (buffer) => {
-    const data = buffer.toString();
-
-    try {
-      const response = client.response(data);
-      console.log("response:", response);
-
-      switch (response.heos.command) {
-        case "player/get_players": {
-          const [{ pid }] = response.payload;
-          client.command("player/volume_down", { pid });
-          //   client.command("player/volume_up", { pid });
-        }
-      }
-    } catch (e) {
-      console.error("Unable to parse", data);
-    }
-  });
-
-  socket.on("error", (err) => {
-    console.error("Error:", err.message);
-  });
-
-  socket.on("close", () => {
-    console.log("Connection closed");
-  });
-
-  // socket.connect(heosPort, host, () => {
-  //   console.log("Connection opened");
-  //   client.command("player/get_players");
-  // });
-}
+import { upnpService } from "./env";
 
 type MainArgs = {
   deviceFriendlyName: string;
@@ -49,10 +14,8 @@ type MainArgs = {
 
 async function main({ deviceFriendlyName }: MainArgs) {
   const timeout = 5_000;
-  const upnpService = "urn:schemas-denon-com:service:ACT:1";
 
-  // const location = "http://192.168.4.55:60006/upnp/desc/aios_device/aios_device.xml";
-  const location = await awaitAtMost(getDeviceLocation(upnpService), timeout);
+  const location = await awaitAtMost(getServiceDeviceDescriptorUrl(upnpService), timeout);
   const aiosDevice = await awaitAtMost(getAiosDevice(location), timeout);
 
   const deviceControlService = findService(aiosDevice, {
@@ -69,14 +32,7 @@ async function main({ deviceFriendlyName }: MainArgs) {
   });
 
   socket.connect(Number(port), hostname, () => {
-    controller("SetAudioConfig", {
-      AudioConfig: {
-        AudioConfig: {
-          digitalFilter: "FILTER_1",
-          lowpass: 120,
-        }
-      }
-    })
+    controller("GetWirelessProfile")
       .then(() => console.log("commanded"))
       .catch((err) => console.error("failed to command", err));
   });
