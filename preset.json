@@ -1,0 +1,17 @@
+{
+  "_multiRoomAudioQuality": "high",
+  "statusLedBrightness": 100,
+  "_energyMode": "autoSleep",
+  "volumeLimit": 100,
+  "touchControls": "on",
+  "subwooferLevel": 0,
+  "lowPassFilter": 120,
+  "digitalFilter": "filter1",
+  "balance": 0,
+  "outputMode": "stereo",
+  "highPassFilter": 80,
+  "_tvInput": "hdmi",
+  "tvAutoplay": "on",
+  "tvRemoteCodes": "on",
+  "audioDelay": 100
+}

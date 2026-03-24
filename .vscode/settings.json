@@ -1,0 +1,8 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["preset.json", "*.preset.json"],
+      "url": "./receiverSettings.schema.json"
+    }
+  ]
+}

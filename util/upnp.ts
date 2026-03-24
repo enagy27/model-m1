@@ -1,8 +1,8 @@
 import * as v from "valibot";
 
-type ISocket = {
-  send: (message: string) => void;
+type UpnpArgs = {
   readonly host: `${string}:${number}`;
+  send: (message: string) => void;
 };
 
 const responseSchema = v.pipe(
@@ -36,11 +36,11 @@ const responseSchema = v.pipe(
   }),
 );
 
-export function upnp(socket: ISocket) {
+export function upnp({ host, send }: UpnpArgs) {
   const search = (service: string) => {
     const message = [
       `M-SEARCH * HTTP/1.1`,
-      `HOST: ${socket.host}`,
+      `HOST: ${host}`,
       `MAN: "ssdp:discover"`,
       `ST: ${service}`,
       `MX: 3`,
@@ -48,7 +48,7 @@ export function upnp(socket: ISocket) {
       ``,
     ].join("\r\n");
 
-    socket.send(message);
+    send(message);
   };
 
   const parseResponse = (message: string) => {
