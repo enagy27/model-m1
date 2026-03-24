@@ -11,8 +11,9 @@ const primitiveSchema = v.union([
   v.string(),
 ]);
 
-type ISocket = {
+type ControlArgs = {
   readonly host: string;
+  readonly pathname: string;
   write(message: string): void;
 };
 
@@ -20,7 +21,7 @@ type OutputMode = "STEREO"; // or double mono?
 type SoundMode = "DIRECT" | "STEREO" | "VIRTUAL";
 
 /** Audio settings for things like filters and sound modes */
-type AudioConfig = {
+export type AudioConfig = {
   highpass: 40 | 80 | 90 | 100 | 110 | 120 | 150 | 200 | 250; // or off?
   lowpass: 40 | 60 | 80 | 90 | 100 | 110 | 120; // can I shut this off?
   subwooferEnable: unknown;
@@ -40,20 +41,21 @@ type AudioConfig = {
   diracHistory: unknown;
 };
 
-type LED =
-  | { name: "NETWORK"; brightness: number /* 0-100 */ }
-  | {
-      name: "TOUCH";
-      feedbackSoundsEnable: 0 | 1;
-      enable: 0 | 1;
-      defaults: {
-        feedbackSoundsEnable: 0 | 1;
-        enable: 0 | 1;
-      };
-    };
+export type NetworkLEDConfig = {
+  name: "NETWORK";
+  brightness: number; /* 0-100 */
+};
+
+export type TouchLEDConfig = {
+  name: "TOUCH";
+  feedbackSoundsEnable: 0 | 1;
+  enable: 0 | 1;
+};
+
+type IndividualLEDConfig = NetworkLEDConfig | TouchLEDConfig;
 
 /** Controls LEDs on the front of the device showing network status and touch response */
-type LEDConfig = { led: LED[] };
+export type LEDConfig = { led: IndividualLEDConfig[] };
 
 /**
  * Config for syncing audio and video. Applies an artificial delay to audio signal to
@@ -115,7 +117,7 @@ type SurroundSpeakerConfig = {
   DistUnit: "m" | "ft";
 };
 
-type TvConfig = {
+export type TvConfig = {
   input: string;
   connectedInputs: string;
   hdmiVolume: 0 | 1;
@@ -188,7 +190,7 @@ type TvConfig = {
     enabled: 0 | 1;
     max: number;
   };
-  tvRemoteCodes: number;
+  tvRemoteCodes: 0 | 1;
 };
 
 type WirelessProfile = {
@@ -267,7 +269,7 @@ type ControlRequests = {
 type ControlRequestArgs<K extends keyof ControlRequests> =
   ControlRequests[K] extends never ? [K] : [K, ControlRequests[K]];
 
-export function control(socket: ISocket) {
+export function control({ host, pathname, write }: ControlArgs) {
   const builder = new XMLBuilder({ ignoreAttributes: false });
 
   function createBody<K extends keyof ControlRequests>(
@@ -312,7 +314,7 @@ export function control(socket: ISocket) {
 
     const contentLength = Buffer.byteLength(body);
     const headers = Object.entries({
-      HOST: socket.host,
+      HOST: host,
       "CONTENT-LENGTH": `${contentLength}`,
       "Accept-Ranges": "bytes",
       "CONTENT-TYPE": `text/xml; charset="utf-8"`,
@@ -321,13 +323,13 @@ export function control(socket: ISocket) {
     });
 
     const command = [
-      "POST /ACT/control HTTP/1.1",
+      `POST ${pathname} HTTP/1.1`,
       serializeHeaders(headers),
       "",
       body,
     ].join("\r\n");
 
-    socket.write(command);
+    write(command);
   };
 }
 

@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import qs from "qs";
 
-type ISocket = {
+type HeosArgs = {
   write(address: string): void;
 };
 
@@ -19,11 +19,11 @@ type HeosCommand = {
     }]
 };
 
-function command(socket: ISocket) {
+function command({ write }: Pick<HeosArgs, "write">) {
   return function<C extends keyof HeosCommand>(pathname: C, ...args: HeosCommand[C]) {
     const search = args ? qs.stringify(args, { addQueryPrefix: true }) : "";
 
-    socket.write(`heos://${pathname}${search}\r\n`);
+    write(`heos://${pathname}${search}\r\n`);
   }
 }
 
@@ -66,9 +66,9 @@ function response(data: string): HeosResponse {
   return v.parse(responseSchema, json);
 }
 
-export function heos(client: ISocket) {
+export function heos(args: HeosArgs) {
   return {
-    command: command(client),
+    command: command(args),
     response,
   };
 }

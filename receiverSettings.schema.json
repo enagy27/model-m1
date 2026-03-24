@@ -1,0 +1,98 @@
+{
+  "_comment": "AUTO-GENERATED: This schema was generated from the receiverSettingsSchema valibot schema in util/receiverSettings.ts. Do not edit manually.",
+  "type": "object",
+  "properties": {
+    "multiRoomAudioQuality": {
+      "enum": [],
+      "type": "string"
+    },
+    "statusLedBrightness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "energyMode": {
+      "enum": [],
+      "type": "string"
+    },
+    "volumeLimit": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "touchControls": {
+      "enum": [
+        "off",
+        "on",
+        "onWithSound"
+      ],
+      "type": "string"
+    },
+    "subwooferLevel": {
+      "type": "number",
+      "minimum": -15,
+      "maximum": 15
+    },
+    "lowPassFilter": {
+      "enum": [
+        40,
+        60,
+        80,
+        90,
+        100,
+        110,
+        120
+      ],
+      "type": "number"
+    },
+    "digitalFilter": {
+      "enum": [
+        "filter1",
+        "filter2"
+      ],
+      "type": "string"
+    },
+    "balance": {},
+    "outputMode": {
+      "enum": [
+        "stereo"
+      ],
+      "type": "string"
+    },
+    "highPassFilter": {
+      "enum": [
+        40,
+        80,
+        100,
+        110,
+        120
+      ],
+      "type": "number"
+    },
+    "tvInput": {
+      "enum": [],
+      "type": "string"
+    },
+    "tvAutoplay": {
+      "enum": [
+        "off",
+        "on"
+      ],
+      "type": "string"
+    },
+    "tvRemoteCodes": {
+      "enum": [
+        "off",
+        "on"
+      ],
+      "type": "string"
+    },
+    "audioDelay": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 500
+    }
+  },
+  "required": [],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,9 +1,15 @@
-export async function awaitAtMost<T>(promise: Promise<T>, duration: number): Promise<T> {
-  const timeoutPromise = new Promise<T>((_, reject) => {
-    setTimeout(() => {
-      reject();
-    }, duration);
-  });
+export async function sleep(duration: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(() => resolve(), duration));
+}
 
-  return Promise.race([promise, timeoutPromise]);
+export async function awaitAtMost<T>(
+  promise: Promise<T>,
+  duration: number,
+): Promise<T> {
+  const throwAfterDurationFn = async () => {
+    await sleep(duration);
+    throw new Error("TIMEOUT");
+  };
+
+  return Promise.race([promise, throwAfterDurationFn()]);
 }
