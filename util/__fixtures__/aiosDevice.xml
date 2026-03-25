@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0" xmlns:DMH="http://www.dmglobal.com"
+    xmlns:qq="http://www.tencent.com"
+    xmlns:avega_media_server="urn:schemas-avegasystems-com:media-server:metadata-1-0:DIDL-Lite">
+    <specVersion>
+        <major>1</major>
+        <minor>0</minor>
+    </specVersion>
+    <device>
+        <deviceType>urn:schemas-denon-com:device:AiosDevice:1</deviceType>
+        <friendlyName>Family Room</friendlyName>
+        <manufacturer>Marantz</manufacturer>
+        <manufacturerURL>http://www.marantz.com</manufacturerURL>
+        <modelName>Marantz MODEL M1</modelName>
+        <modelNumber>Aios 5.0V</modelNumber>
+        <serialNumber>MCHV052504681</serialNumber>
+        <UDN>uuid:4fcb4544-07dd-133d-0080-000678fb9572</UDN>
+        <DMH:X_DeviceCapabilities>b8f53b</DMH:X_DeviceCapabilities>
+        <deviceList>
+            <device>
+                <deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+                <friendlyName>Family Room</friendlyName>
+                <manufacturer>Marantz</manufacturer>
+                <manufacturerURL>http://www.marantz.com</manufacturerURL>
+                <modelName>Marantz MODEL M1</modelName>
+                <modelNumber>Aios 5.0V</modelNumber>
+                <UDN>uuid:278ad078-8e99-1b2c-0080-000678fb9572</UDN>
+                <X_Play_Queue_Capacity>1000</X_Play_Queue_Capacity>
+                <qq:X_QPlay_SoftwareCapability>QPlay:2</qq:X_QPlay_SoftwareCapability>
+                <serviceList>
+                    <service>
+                        <serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+                        <serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+                        <SCPDURL>/upnp/scpd/renderer_dvc/AVTransport.xml</SCPDURL>
+                        <controlURL>/upnp/control/renderer_dvc/AVTransport</controlURL>
+                        <eventSubURL>/upnp/event/renderer_dvc/AVTransport</eventSubURL>
+                    </service>
+                    <service>
+                        <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+                        <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+                        <SCPDURL>/upnp/scpd/renderer_dvc/ConnectionManager.xml</SCPDURL>
+                        <controlURL>/upnp/control/renderer_dvc/ConnectionManager</controlURL>
+                        <eventSubURL>/upnp/event/renderer_dvc/ConnectionManager</eventSubURL>
+                    </service>
+                    <service>
+                        <serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType>
+                        <serviceId>urn:upnp-org:serviceId:RenderingControl</serviceId>
+                        <SCPDURL>/upnp/scpd/renderer_dvc/RenderingControl.xml</SCPDURL>
+                        <controlURL>/upnp/control/renderer_dvc/RenderingControl</controlURL>
+                        <eventSubURL>/upnp/event/renderer_dvc/RenderingControl</eventSubURL>
+                    </service>
+                    <service>
+                        <serviceType>urn:schemas-tencent-com:service:QPlay:1</serviceType>
+                        <serviceId>urn:tencent-com:serviceId:QPlay</serviceId>
+                        <SCPDURL>/upnp/scpd/renderer_dvc/QPlay.xml</SCPDURL>
+                        <controlURL>/upnp/control/renderer_dvc/QPlay</controlURL>
+                        <eventSubURL>/upnp/event/renderer_dvc/QPlay</eventSubURL>
+                    </service>
+                </serviceList>
+            </device>
+            <device>
+                <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
+                <friendlyName>Family Room</friendlyName>
+                <manufacturer>Marantz</manufacturer>
+                <manufacturerURL>http://www.marantz.com</manufacturerURL>
+                <modelDescription>
+                    Shares User defined folders and files to other Universal Plug and Play media
+                    devices.
+</modelDescription>
+                <modelName>Marantz MODEL M1</modelName>
+                <modelNumber>Aios 5.0V</modelNumber>
+                <serialNumber>MCHV052504681</serialNumber>
+                <UDN>uuid:7384fb3a-44d6-810e-75ab-0d775e07caeb</UDN>
+                <avega_media_server:X_VirtualServersSupported>True</avega_media_server:X_VirtualServersSupported>
+                <avega_media_server:X_VirtualServersSupported>True</avega_media_server:X_VirtualServersSupported>
+                <avega_media_server:X_VirtualServersSupported>True</avega_media_server:X_VirtualServersSupported>
+                <avega_media_server:X_VirtualServersSupported>True</avega_media_server:X_VirtualServersSupported>
+                <serviceList>
+                    <service>
+                        <serviceType>urn:schemas-upnp-org:service:ContentDirectory:1</serviceType>
+                        <serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>
+                        <SCPDURL>/upnp/scpd/ams_dvc/ContentDirectory.xml</SCPDURL>
+                        <controlURL>/upnp/control/ams_dvc/ContentDirectory</controlURL>
+                        <eventSubURL>/upnp/event/ams_dvc/ContentDirectory</eventSubURL>
+                    </service>
+                    <service>
+                        <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+                        <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+                        <SCPDURL>/upnp/scpd/ams_dvc/ConnectionManager.xml</SCPDURL>
+                        <controlURL>/upnp/control/ams_dvc/ConnectionManager</controlURL>
+                        <eventSubURL>/upnp/event/ams_dvc/ConnectionManager</eventSubURL>
+                    </service>
+                </serviceList>
+            </device>
+            <device>
+                <deviceType>urn:schemas-denon-com:device:AiosServices:1</deviceType>
+                <friendlyName>AiosServices</friendlyName>
+                <manufacturer>Marantz</manufacturer>
+                <manufacturerURL>http://www.marantz.com</manufacturerURL>
+                <modelName>Marantz MODEL M1</modelName>
+                <modelNumber>Aios 5.0V</modelNumber>
+                <UDN>uuid:7dbb42f1-9d9f-1d4c-0080-000678fb9572</UDN>
+                <serviceList>
+                    <service>
+                        <serviceType>urn:schemas-denon-com:service:ErrorHandler:1</serviceType>
+                        <serviceId>urn:denon-com:serviceId:ErrorHandler</serviceId>
+                        <SCPDURL>/upnp/scpd/AiosServicesDvc/ErrorHandler.xml</SCPDURL>
+                        <controlURL>/upnp/control/AiosServicesDvc/ErrorHandler</controlURL>
+                        <eventSubURL>/upnp/event/AiosServicesDvc/ErrorHandler</eventSubURL>
+                    </service>
+                    <service>
+                        <serviceType>urn:schemas-denon-com:service:ZoneControl:2</serviceType>
+                        <serviceId>urn:denon-com:serviceId:ZoneControl</serviceId>
+                        <SCPDURL>/upnp/scpd/AiosServicesDvc/ZoneControl.xml</SCPDURL>
+                        <controlURL>/upnp/control/AiosServicesDvc/ZoneControl</controlURL>
+                        <eventSubURL>/upnp/event/AiosServicesDvc/ZoneControl</eventSubURL>
+                    </service>
+                    <service>
+                        <serviceType>urn:schemas-denon-com:service:GroupControl:1</serviceType>
+                        <serviceId>urn:denon-com:serviceId:GroupControl</serviceId>
+                        <SCPDURL>/upnp/scpd/AiosServicesDvc/GroupControl.xml</SCPDURL>
+                        <controlURL>/upnp/control/AiosServicesDvc/GroupControl</controlURL>
+                        <eventSubURL>/upnp/event/AiosServicesDvc/GroupControl</eventSubURL>
+                    </service>
+                </serviceList>
+            </device>
+            <device>
+                <deviceType>urn:schemas-denon-com:device:ACT-Denon:1</deviceType>
+                <friendlyName>Family Room</friendlyName>
+                <manufacturer>Marantz</manufacturer>
+                <manufacturerURL>http://www.marantz.com</manufacturerURL>
+                <modelName>Marantz MODEL M1</modelName>
+                <modelNumber>Aios 5.0V</modelNumber>
+                <serialNumber>MCHV052504681</serialNumber>
+                <UDN>uuid:e1296764-56c7-ce2c-60b3-a5abea264d7f</UDN>
+                <DeviceID>AIOS:0001</DeviceID>
+                <capability_version>4</capability_version>
+                <firmwareRevision>1763027084</firmwareRevision>
+                <firmware_date>Fri 2025-11-14 00:09:43</firmware_date>
+                <firmware_version>3.88.532</firmware_version>
+                <lanMac>00:06:78:FB:95:70</lanMac>
+                <locale>en_NA</locale>
+                <moduleRevision>3</moduleRevision>
+                <moduleType>Aios 5.0V</moduleType>
+                <productRevision>1</productRevision>
+                <releaseType>Production</releaseType>
+                <wlanMac>00:06:78:FB:95:72</wlanMac>
+                <serviceList>
+                    <service>
+                        <serviceType>urn:schemas-denon-com:service:ACT:1</serviceType>
+                        <serviceId>urn:denon-com:serviceId:ACT</serviceId>
+                        <SCPDURL>/ACT/SCPD.xml</SCPDURL>
+                        <controlURL>/ACT/control</controlURL>
+                        <eventSubURL>/ACT/event</eventSubURL>
+                    </service>
+                </serviceList>
+            </device>
+        </deviceList>
+    </device>
+</root>
