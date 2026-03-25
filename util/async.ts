@@ -6,10 +6,13 @@ export async function awaitAtMost<T>(
   promise: Promise<T>,
   duration: number,
 ): Promise<T> {
-  const throwAfterDurationFn = async () => {
-    await sleep(duration);
-    throw new Error("TIMEOUT");
-  };
+  let timeoutId: NodeJS.Timeout | undefined;
 
-  return Promise.race([promise, throwAfterDurationFn()]);
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("TIMEOUT")), duration);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    clearTimeout(timeoutId);
+  });
 }
