@@ -15,6 +15,7 @@
   "type": "module",
   "module": "main.ts",
   "scripts": {
+    "main": "npx tsx main.ts",
     "test": "vitest run"
   },
   "dependencies": {

@@ -36,7 +36,14 @@ const responseSchema = v.pipe(
   }),
 );
 
-export function upnp({ host, send }: UpnpArgs) {
+type UpnpResponse = v.InferOutput<typeof responseSchema>;
+
+export type UpnpClient = {
+  search(service: string): void;
+  parseResponse(message: string): UpnpResponse;
+};
+
+export function upnp({ host, send }: UpnpArgs): UpnpClient {
   const search = (service: string) => {
     const message = [
       `M-SEARCH * HTTP/1.1`,

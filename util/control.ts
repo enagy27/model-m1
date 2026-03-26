@@ -11,7 +11,7 @@ const primitiveSchema = v.union([
   v.string(),
 ]);
 
-type ControlArgs = {
+export type ControlArgs = {
   readonly host: string;
   readonly pathname: string;
   write(message: string): void;
