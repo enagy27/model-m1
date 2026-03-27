@@ -78,6 +78,8 @@ export function getConfigsFromReceiverSettings({
         } satisfies TouchLEDConfig)
       : undefined;
 
+  const led = [networkLED, touchLED].filter((led) => led != null);
+
   return {
     AudioConfig: minifyConfig({
       bassBoost: subwooferLevel,
@@ -90,10 +92,11 @@ export function getConfigsFromReceiverSettings({
       outputMode: outputMode === "stereo" ? "STEREO" : undefined,
       highpass: highPassFilter,
     } satisfies Partial<AudioConfig>),
-    
-    LEDConfig: minifyConfig({
-      led: [networkLED, touchLED].filter((led) => led != null),
-    }) satisfies LEDConfig | undefined,
+
+    LEDConfig:
+      led.length > 0
+        ? (minifyConfig({ led }) satisfies LEDConfig | undefined)
+        : undefined,
 
     TVConfig: minifyConfig({
       autoPlay: tvAutoplay != null ? Binary(tvAutoplay === "on") : undefined,

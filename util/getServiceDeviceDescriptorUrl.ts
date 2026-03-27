@@ -1,5 +1,5 @@
-import dgram from "dgram";
-import { UpnpClient } from "./upnp";
+import * as sockets from "./sockets";
+import { search } from "./upnp";
 
 export type DeviceData = {
   manufacturer: string;
@@ -7,16 +7,36 @@ export type DeviceData = {
 };
 
 type IDgramSocket = {
-  bind(): void;
-  on(eventName: "listening", listener: () => void): void;
-  on(eventName: "message", listener: (msg: Pick<Buffer<ArrayBuffer>, "toString">) => void): void;
-  on(eventName: "error", listener: (err: Error) => void): void;
-}
+  bind(this: void): void;
+  send(this: void, msg: string): void;
+
+  on(this: void, eventName: "listening", listener: () => void): void;
+  on(
+    this: void,
+    eventName: "message",
+    listener: (msg: Pick<Buffer<ArrayBuffer>, "toString">) => void,
+  ): void;
+  on(this: void, eventName: "error", listener: (err: Error) => void): void;
+
+  off(this: void, eventName: "listening", listener: () => void): void;
+  off(
+    this: void,
+    eventName: "message",
+    listener: (msg: Pick<Buffer<ArrayBuffer>, "toString">) => void,
+  ): void;
+  off(this: void, eventName: "error", listener: (err: Error) => void): void;
+};
+
+type IOutput = {
+  log(this: void, info: string): void;
+  error(this: void, err: string): void;
+};
 
 type GetServiceDeviceDescriptorUrlArgs = {
+  host: string;
   socket: IDgramSocket;
-  client: UpnpClient;
   service: string;
+  output: IOutput;
 };
 
 /**
@@ -29,34 +49,67 @@ type GetServiceDeviceDescriptorUrlArgs = {
  * @returns UPNP device information XML file endpoint
  */
 export async function getServiceDeviceDescriptorUrl({
+  host,
   socket,
-  client,
   service,
+  output,
 }: GetServiceDeviceDescriptorUrlArgs): Promise<string> {
   return new Promise((resolve, reject) => {
-    socket.on("listening", () => {
-      client.search(service);
-    });
+    function cleanup() {
+      socket.off("listening", onListening);
+      socket.off("message", onMessage);
+      socket.off("error", onError);
+    }
 
-    socket.on("message", (messageBuffer) => {
+    function onListening() {
+      const searchMessage = search({ host, service });
+
+      output.log(
+        `getServiceDeviceDescriptorUrl: sending search: ${searchMessage}`,
+      );
+      socket.send(searchMessage);
+
+      // fire once
+      socket.off("listening", onListening);
+    }
+
+    function onMessage(messageBuffer: { toString: () => string }) {
       const message = messageBuffer.toString();
-      const response = client.parseResponse(message.toString());
-      if (!response.success) {
+
+      try {
+        const { headers } = sockets.response(message);
+        const { ST, LOCATION } = headers;
+        output.log(
+          `getServiceDeviceDescriptorUrl: Message received on UPNP socket with ST="${ST}" and LOCATION="${LOCATION}"`,
+        );
+
+        if (ST !== service || !LOCATION) {
+          return;
+        }
+
+        resolve(LOCATION);
+
+        cleanup();
+      } catch (error) {
+        output.error(
+          `getServiceDeviceDescriptorUrl: Failed to parse message on UPNP socket`,
+        );
         return;
       }
+    }
 
-      const { ST, LOCATION } = response.headers;
-      if (ST !== service || !LOCATION) {
-        return;
-      }
-
-      resolve(LOCATION);
-    });
-
-    socket.on("error", (err) => {
+    function onError(err: Error) {
+      output.error(`getServiceDeviceDescriptorUrl: UPNP socket error ${err}`);
       reject(err);
-    });
+
+      cleanup();
+    }
+
+    socket.on("listening", onListening);
+    socket.on("message", onMessage);
+    socket.on("error", onError);
 
     socket.bind();
+    output.log("getServiceDeviceDescriptorUrl: Bound socket for UPNP");
   });
 }

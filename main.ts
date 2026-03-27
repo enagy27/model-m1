@@ -11,14 +11,14 @@ import { getServiceDeviceDescriptorUrl } from "./util/getServiceDeviceDescriptor
 import { AiosDevice, getAiosDevice } from "./util/getAiosDevice";
 import { findService } from "./util/findService";
 import { control, ControlInstance } from "./util/control";
-import { upnp } from "./util/upnp";
 import { upnpService, upnpAddress, upnpPort } from "./env";
+import * as sockets from "./util/sockets";
 import {
   ReceiverSettings,
   receiverSettingsSchema,
 } from "./util/receiverSettings";
 import { getConfigsFromReceiverSettings } from "./util/getConfigsFromReceiverSettings";
-import { entries } from "./util/object";
+import { entries, isEmptyObject } from "./util/object";
 
 type IOutput = {
   log(info: string): void;
@@ -33,34 +33,45 @@ type DiscoverArgs = {
 async function discover({ friendlyName, output }: DiscoverArgs) {
   let deviceDescriptorUrl: string | undefined;
   try {
-    const socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
-    const client = upnp({
-      host: `${upnpAddress}:${upnpPort}`,
-      send: (message) => socket.send(message, upnpPort, upnpAddress),
+    const socket = dgram.createSocket({
+      type: "udp4",
+      reuseAddr: true,
     });
 
-    output.log(`Searching for device descriptor URL`);
+    output.log(
+      `discover: Searching for device descriptor URL for service "${upnpService}"`,
+    );
     deviceDescriptorUrl = await getServiceDeviceDescriptorUrl({
-      socket,
-      client,
+      host: `${upnpAddress}:${upnpPort}`,
       service: upnpService,
+      output,
+      socket: {
+        bind: () => socket.bind(),
+        on: (eventName, listener) => socket.on(eventName, listener),
+        off: (eventName, listener) => socket.on(eventName, listener),
+        send: (message) => socket.send(message, upnpPort, upnpAddress),
+      },
     });
     output.log(
-      `Successfully retrieved device descriptor URL "${deviceDescriptorUrl}"`,
+      `discover: Successfully retrieved device descriptor URL "${deviceDescriptorUrl}" for service "${upnpService}"`,
     );
   } catch (error) {
-    output.error(`Failed to discover plug-n-play device: ${upnpService}`);
+    output.error(
+      `discover: Failed to discover plug-n-play device: "${upnpService}"`,
+    );
     throw error;
   }
 
   let aiosDevice: AiosDevice | undefined;
   try {
-    output.log(`Getting AIOS device at "${deviceDescriptorUrl}"`);
+    output.log(`discover: Getting AIOS device at "${deviceDescriptorUrl}"`);
     aiosDevice = await getAiosDevice(deviceDescriptorUrl);
-    output.log(`Successfully got AIOS device at "${deviceDescriptorUrl}"`);
+    output.log(
+      `discover: Successfully got AIOS device at "${deviceDescriptorUrl}"`,
+    );
   } catch (error) {
     output.error(
-      `Failed to retrieve device descriptor at ${deviceDescriptorUrl}`,
+      `discover: Failed to retrieve device descriptor at ${deviceDescriptorUrl}`,
     );
     throw error;
   }
@@ -73,7 +84,7 @@ async function discover({ friendlyName, output }: DiscoverArgs) {
   const { hostname, port } = new URL(deviceDescriptorUrl);
 
   output.log(
-    `Identified device control service "${hostname}:${port}${deviceControlService.controlURL}"`,
+    `discover: Identified device control service "${hostname}:${port}${deviceControlService.controlURL}"`,
   );
 
   return {
@@ -94,17 +105,19 @@ async function readSettingsFile({
 }: ReadSettingsFileArgs): Promise<ReceiverSettings> {
   try {
     const resolvedPath = pathUtils.resolve(path);
-    output.log(`Settings file path resolved to: "${resolvedPath}"`);
+    output.log(
+      `readSettingsFile: Settings file path resolved to: "${resolvedPath}"`,
+    );
 
     const receiverSettingsTextData = await fs.readFile(resolvedPath, "utf-8");
-    output.log(`Successfully read settings file`);
+    output.log(`readSettingsFile: Successfully read settings file`);
 
     return v.parse(
       receiverSettingsSchema,
       JSON.parse(receiverSettingsTextData),
     );
   } catch (error) {
-    output.error(`Failed to read settings file: "${path}"`);
+    output.error(`readSettingsFile: Failed to read settings file: "${path}"`);
     throw error;
   }
 }
@@ -112,18 +125,30 @@ async function readSettingsFile({
 type ApplySettingsArgs = {
   controller: ControlInstance;
   receiverSettings: ReceiverSettings;
+  output: IOutput;
 };
 
 async function applySettings({
   controller,
   receiverSettings,
+  output,
 }: ApplySettingsArgs) {
   const configs = getConfigsFromReceiverSettings(receiverSettings);
 
   for (const [command, config] of entries(configs)) {
-    if (!config) {
+    if (config == null) {
+      output.log(`applySettings: skipping "${command}"`);
       continue;
     }
+
+    if (typeof config === "object" && isEmptyObject(config)) {
+      output.log(`applySettings: skipping "${command}"`);
+      return;
+    }
+
+    output.log(
+      `applySettings: command="${command}" with config: ${JSON.stringify(config, null, 2)}`,
+    );
 
     switch (command) {
       case "AudioConfig": {
@@ -136,7 +161,7 @@ async function applySettings({
 
       case "LEDConfig": {
         await controller("SetLEDConfig", {
-          LEDConfig: config,
+          LEDConfig: { LEDConfig: config },
         });
 
         continue;
@@ -163,9 +188,10 @@ async function applySettings({
   // wait for the socket to finish up
   await sleep(100);
 
-  await controller("GetVolumeLimit");
+  await controller("GetLEDConfig");
 
-  await sleep(1000);
+  // Wait for the response
+  await sleep(1_000);
 }
 
 type MainArgs = {
@@ -184,28 +210,36 @@ async function main({
   output,
   discoverTimeout,
 }: MainArgs) {
-  output.log(`Reading settingsFile="${settingsFile}"`);
+  output.log(`main: Reading settingsFile="${settingsFile}"`);
   const receiverSettingsPromise = readSettingsFile({
     path: settingsFile,
     output,
   });
 
-  output.log(`Discovering device friendlyName="${friendlyName}"`);
+  output.log(`main: Discovering device friendlyName="${friendlyName}"`);
   const discoverPromise = awaitAtMost(
     discover({ friendlyName, output }),
     discoverTimeout,
   );
 
   const receiverSettings = await receiverSettingsPromise;
-  output.log(`Successfully parsed settings file`);
+  output.log(`main: Successfully parsed settings file`);
 
   const { port, hostname, pathname } = await discoverPromise;
-  output.log(`Successfully discovered device at ${hostname}:${port}`);
+  output.log(`main: Successfully discovered device at "${hostname}:${port}"`);
 
   const controlSocket = new net.Socket();
 
-  controlSocket.on("data", (message) => {
-    output.log(`data received: ${message.toString()}`);
+  controlSocket.on("data", (buffer) => {
+    const message = buffer.toString();
+
+    try {
+      const response = sockets.response(message);
+
+      output.log(`main: ${response.statusCode} response received: ${message}`);
+    } catch (error) {
+      output.log(`main: data received: ${message}`);
+    }
   });
 
   controlSocket.connect(port, hostname, () => {
@@ -213,11 +247,12 @@ async function main({
       host: `${hostname}:${port}`,
       pathname,
       write: (cmd) => controlSocket.write(cmd),
+      output,
     });
 
-    void applySettings({ controller, receiverSettings })
+    void applySettings({ controller, receiverSettings, output })
       .catch((err) => {
-        output.error(`Failed to apply settings: ${err}`);
+        output.error(`main: Failed to apply settings: ${err}`);
         controlSocket.destroy();
         process.exit(1);
       })
