@@ -9,7 +9,7 @@ export function search({ host, service }: SearchArgs): string {
     `HOST: ${host}`,
     `MAN: "ssdp:discover"`,
     `ST: ${service}`,
-    `MX: 5`,
+    `MX: 3`,
     ``,
     ``,
   ].join("\r\n");
