@@ -44,6 +44,7 @@ describe("control", () => {
       host: "192.168.4.55:60006",
       pathname: "/ACT/control",
       write: (message: string) => written.push(message),
+      output: { log: vi.fn(), error: vi.fn() },
       getWritten: () => written,
     };
   };
@@ -145,8 +146,10 @@ describe("control", () => {
       });
 
       // Ensure that the XML value is encoded
-      expect(body).toContain(audioConfigXml.replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
-      
+      expect(body).toContain(
+        audioConfigXml.replaceAll("<", "&lt;").replaceAll(">", "&gt;"),
+      );
+
       // Body should end with CRLF
       expect(body.slice(-2)).toEqual("\r\n");
     });

@@ -43,7 +43,7 @@ const aiosDeviceSchema = v.object({
 
 export type AiosDevice = v.InferOutput<typeof aiosDeviceSchema>;
 
-export async function getAiosDevice(location: string) {
+export async function getAiosDevice(location: string): Promise<AiosDevice> {
   const response = await fetch(location);
   const text = await response.text();
 

@@ -4,6 +4,11 @@ import * as v from "valibot";
 import { serializeHeaders } from "./tcp";
 import { upnpService } from "../env";
 
+type IOutput = {
+  log(this: void, info: string): void;
+  error(this: void, err: string): void;
+};
+
 const primitiveSchema = v.union([
   v.bigint(),
   v.boolean(),
@@ -11,10 +16,11 @@ const primitiveSchema = v.union([
   v.string(),
 ]);
 
-type ControlArgs = {
+export type ControlArgs = {
   readonly host: string;
   readonly pathname: string;
   write(message: string): void;
+  readonly output: IOutput;
 };
 
 type OutputMode = "STEREO"; // or double mono?
@@ -257,7 +263,7 @@ type ControlRequests = {
   GetFriendlyName: never;
   SetFriendlyName: { configurationToken: string; friendlyName: string };
   GetLEDConfig: never;
-  SetLEDConfig: { LEDConfig: Partial<LEDConfig> };
+  SetLEDConfig: { LEDConfig: { LEDConfig: Partial<LEDConfig> } };
   GetTranscode: never;
   SetTranscode: { transcode: boolean };
 
@@ -269,7 +275,7 @@ type ControlRequests = {
 type ControlRequestArgs<K extends keyof ControlRequests> =
   ControlRequests[K] extends never ? [K] : [K, ControlRequests[K]];
 
-export function control({ host, pathname, write }: ControlArgs) {
+export function control({ host, pathname, write, output }: ControlArgs) {
   const builder = new XMLBuilder({ ignoreAttributes: false });
 
   function createBody<K extends keyof ControlRequests>(
@@ -310,6 +316,10 @@ export function control({ host, pathname, write }: ControlArgs) {
   ) {
     const [action, data = {}] = args;
 
+    output.log(
+      `control: invoking action="${action}" with data: ${JSON.stringify(data, null, 2)}`,
+    );
+
     const body = createBody(action, data);
 
     const contentLength = Buffer.byteLength(body);
@@ -330,6 +340,8 @@ export function control({ host, pathname, write }: ControlArgs) {
     ].join("\r\n");
 
     write(command);
+
+    output.log(`control: wrote command: ${command}`);
   };
 }
 
