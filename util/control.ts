@@ -6,6 +6,7 @@ import { upnpService } from "../env";
 
 type IOutput = {
   log(this: void, info: string): void;
+  debug(this: void, info: string): void;
   error(this: void, err: string): void;
 };
 
@@ -316,7 +317,7 @@ export function control({ host, pathname, write, output }: ControlArgs) {
   ) {
     const [action, data = {}] = args;
 
-    output.log(
+    output.debug(
       `control: invoking action="${action}" with data: ${JSON.stringify(data, null, 2)}`,
     );
 
@@ -341,7 +342,7 @@ export function control({ host, pathname, write, output }: ControlArgs) {
 
     write(command);
 
-    output.log(`control: wrote command: ${command}`);
+    output.debug(`control: wrote command: ${command}`);
   };
 }
 

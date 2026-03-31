@@ -23,3 +23,13 @@ export const heosPort = v.parse(
   v.optional(numberAsString, `${1255}`),
   process.env.HEOS_PORT,
 );
+
+export const defaultAiosControlPort = v.parse(
+  v.optional(numberAsString, `${60006}`),
+  process.env.DEFAULT_AIOS_CONTROL_PORT,
+);
+
+export const defaultAiosControlPathname = v.parse(
+  v.optional(v.string(), "/ACT/control"),
+  process.env.DEFAULT_AIOS_CONTROL_PATHNAME,
+);
