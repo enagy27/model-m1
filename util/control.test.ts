@@ -44,7 +44,7 @@ describe("control", () => {
       host: "192.168.4.55:60006",
       pathname: "/ACT/control",
       write: (message: string) => written.push(message),
-      output: { log: vi.fn(), error: vi.fn() },
+      output: { log: vi.fn(), debug: vi.fn(), error: vi.fn() },
       getWritten: () => written,
     };
   };

@@ -15,10 +15,11 @@
   "type": "module",
   "module": "main.ts",
   "scripts": {
-    "main": "npx tsx main.ts",
     "test": "vitest run"
   },
   "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
     "dotenv": "^17.3.1",
     "fast-xml-builder": "^1.1.4",
     "fast-xml-parser": "^5.5.6",

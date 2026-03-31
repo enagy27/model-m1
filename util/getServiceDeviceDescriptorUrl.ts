@@ -29,6 +29,7 @@ type IDgramSocket = {
 
 type IOutput = {
   log(this: void, info: string): void;
+  debug(this: void, info: string): void;
   error(this: void, err: string): void;
 };
 
@@ -64,7 +65,7 @@ export async function getServiceDeviceDescriptorUrl({
     function onListening() {
       const searchMessage = search({ host, service });
 
-      output.log(
+      output.debug(
         `getServiceDeviceDescriptorUrl: sending search: ${searchMessage}`,
       );
       socket.send(searchMessage);
@@ -79,7 +80,7 @@ export async function getServiceDeviceDescriptorUrl({
       try {
         const { headers } = sockets.response(message);
         const { ST, LOCATION } = headers;
-        output.log(
+        output.debug(
           `getServiceDeviceDescriptorUrl: Message received on UPNP socket with ST="${ST}" and LOCATION="${LOCATION}"`,
         );
 
@@ -110,6 +111,6 @@ export async function getServiceDeviceDescriptorUrl({
     socket.on("error", onError);
 
     socket.bind();
-    output.log("getServiceDeviceDescriptorUrl: Bound socket for UPNP");
+    output.debug("getServiceDeviceDescriptorUrl: Bound socket for UPNP");
   });
 }
