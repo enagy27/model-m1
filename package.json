@@ -13,7 +13,7 @@
   "license": "ISC",
   "author": "enagy27",
   "type": "module",
-  "module": "main.ts",
+  "module": "index.ts",
   "scripts": {
     "test": "vitest run"
   },
