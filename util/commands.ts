@@ -1,13 +1,15 @@
 import chalk from "chalk";
 import { Option } from "commander";
+import { entries, fromEntries } from "./object";
 
 export type IOutput = {
   log(this: void, info: string): void;
+  table(this: void, data: Record<string, string | number>[]): void;
   debug(this: void, info: string): void;
   error(this: void, err: string): void;
 };
 
-export const logLevels = ["debug", "info"] as const;
+export const logLevels = ["info", "debug"] as const;
 export type LogLevel = (typeof logLevels)[number];
 
 export const logLevelOption = new Option(
@@ -19,12 +21,15 @@ export const logLevelOption = new Option(
 
 const noop = () => {};
 
-export function getOutput(logLevel: LogLevel): IOutput {
-  const debugFn = (info: string) => console.debug(chalk.cyan(info));
+type OutputArgs = {
+  logLevel: LogLevel;
+};
 
+export function getOutput({ logLevel }: OutputArgs): IOutput {
   return {
     log: (info) => console.log(info),
-    debug: logLevel === "debug" ? debugFn : noop,
+    table: (data) => console.table(data),
+    debug: logLevel === "debug" ? (info) => console.debug(chalk.cyan(info)) : noop,
     error: (err) => console.error(chalk.red(err)),
   };
 }

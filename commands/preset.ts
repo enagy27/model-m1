@@ -1,8 +1,9 @@
 import net from "net";
+import fsSync from "fs";
 import fs from "fs/promises";
 import pathUtils from "path";
 import * as v from "valibot";
-import { Command } from "commander";
+import { Command, InvalidOptionArgumentError } from "commander";
 
 import { sleep } from "../util/async";
 import { control, ControlInstance } from "../util/control";
@@ -14,7 +15,15 @@ import {
 } from "../util/receiverSettings";
 import { getConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings";
 import { entries, isEmptyObject } from "../util/object";
-import { getOutput, logLevelOption, logLevels, type IOutput } from "../util/commands";
+import { read as readStream } from "../util/streams";
+import {
+  getOutput,
+  logLevelOption,
+  logLevels,
+  type IOutput,
+} from "../util/commands";
+
+import { createInterface } from "readline";
 
 type ReadSettingsFileArgs = {
   path: string;
@@ -119,16 +128,58 @@ async function applySettings({
 const presetInputSchema = v.tuple([
   v.string(),
   v.object({
-    hostname: v.pipe(v.string(), v.ipv4()),
-    port: v.number(),
-    pathname: v.string(),
+    hostname: v.optional(v.pipe(v.string(), v.ipv4())),
+    port: v.optional(v.number(), defaultAiosControlPort),
+    pathname: v.optional(v.string(), defaultAiosControlPathname),
     logLevel: v.picklist(logLevels),
   }),
 ]);
 
 const presetSchema = v.pipe(
   presetInputSchema,
-  v.transform(([settingsFile, options]) => ({ ...options, settingsFile })),
+  v.transform(([settingsFile, options]) => {
+    return { ...options, settingsFile };
+  }),
+);
+
+const pipedInputSchema = v.pipe(
+  v.optional(v.string()),
+  v.transform((stdin) => {
+    if (stdin == null) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(stdin);
+    } catch {
+      return undefined;
+    }
+  }),
+  v.optional(
+    v.object({
+      hostname: v.pipe(v.string(), v.ipv4()),
+      port: v.number(),
+      devices: v.array(
+        v.object({
+          serviceList: v.object({
+            service: v.array(v.object({ controlURL: v.string() })),
+          }),
+        }),
+      ),
+    }),
+  ),
+  v.transform((data) => {
+    if (!data) {
+      return {};
+    }
+
+    const { hostname, port, devices } = data;
+    const [pathname] = devices.flatMap((device) => {
+      return device.serviceList.service.map(({ controlURL }) => controlURL);
+    });
+
+    return { hostname, port, pathname };
+  }),
 );
 
 export const presetCommand = new Command("preset")
@@ -142,72 +193,81 @@ export const presetCommand = new Command("preset")
     "--port <PORT>",
     "Port used for connecting to the device for control purposes",
     Number,
-    defaultAiosControlPort,
   )
-  .option(
-    "--pathname <PATHNAME>",
-    "SOAP control endpoint",
-    defaultAiosControlPathname,
-  )
+  .option("--pathname <PATHNAME>", "SOAP control endpoint")
   .addOption(logLevelOption)
   .action(async (...args: unknown[]) => {
-      const { settingsFile, hostname, port, pathname, logLevel } = v.parse(
-        presetSchema,
-        args,
+    const parsedPipedInputs = v.safeParse(pipedInputSchema, await readStream(process.stdin));
+    const pipedInputs = parsedPipedInputs.success
+      ? parsedPipedInputs.output
+      : {};
+
+    const {
+      settingsFile,
+      logLevel,
+      hostname = pipedInputs.hostname,
+      port = pipedInputs.port ?? defaultAiosControlPort,
+      pathname = pipedInputs.pathname ?? defaultAiosControlPathname,
+    } = v.parse(presetSchema, args);
+
+    if (hostname == null) {
+      throw new InvalidOptionArgumentError(
+        `"hostname" is required. It can be retrieved using the "discover" command and can be piped to the "preset" command directly as "discover | preset './preset.json'"`,
       );
+    }
 
-      const output = getOutput(logLevel);
+    const output = getOutput({ logLevel });
 
-      output.debug(`main: Reading settingsFile="${settingsFile}"`);
-      const receiverSettingsPromise = readSettingsFile({
-        path: settingsFile,
-        output,
-      });
+    output.debug(`main: Reading settingsFile="${settingsFile}"`);
+    const receiverSettingsPromise = readSettingsFile({
+      path: settingsFile,
+      output,
+    });
 
-      const receiverSettings = await receiverSettingsPromise;
-      output.debug(`main: Successfully parsed settings file`);
+    const receiverSettings = await receiverSettingsPromise;
+    output.debug(`main: Successfully parsed settings file`);
 
-      const controlSocket = new net.Socket();
+    const controlSocket = new net.Socket();
 
-      controlSocket.on("data", (buffer) => {
-        const message = buffer.toString();
-
-        try {
-          const response = sockets.response(message);
-
-          output.debug(
-            `main: ${response.statusCode} response received: ${message}`,
-          );
-        } catch (error) {
-          output.debug(`main: data received: ${message}`);
-        }
-      });
+    controlSocket.on("data", (buffer) => {
+      const message = buffer.toString();
 
       try {
-        const promise = new Promise<void>((resolve, reject) => {
-          const controller = control({
-            host: `${hostname}:${port}`,
-            pathname,
-            write: (cmd) => controlSocket.write(cmd),
-            output,
-          });
+        const response = sockets.response(message);
 
-          const onConnect = () => {
-            void applySettings({ controller, receiverSettings, output })
-              .then(() => {
-                resolve();
-              })
-              .catch((err) => {
-                output.error(`main: Failed to apply settings: ${err}`);
-                reject(err);
-              });
-          };
-
-          controlSocket.connect(port, hostname, onConnect);
-        });
-
-        await promise;
-      } finally {
-        controlSocket.destroy();
+        output.debug(
+          `main: ${response.statusCode} response received: ${message}`,
+        );
+      } catch (error) {
+        output.debug(`main: data received: ${message}`);
       }
     });
+
+    try {
+      const promise = new Promise<void>((resolve, reject) => {
+        const controller = control({
+          host: `${hostname}:${port}`,
+          pathname,
+          write: (cmd) => controlSocket.write(cmd),
+          output,
+        });
+
+        const onConnect = () => {
+          void applySettings({ controller, receiverSettings, output })
+            .then(() => {
+              resolve();
+            })
+            .catch((err) => {
+              output.error(`main: Failed to apply settings: ${err}`);
+              reject(err);
+            });
+        };
+
+        controlSocket.connect(port, hostname, onConnect);
+      });
+
+      await promise;
+    } finally {
+      controlSocket.destroy();
+    }
+  });
