@@ -2,18 +2,17 @@ import dgram from "dgram";
 import * as v from "valibot";
 import { Command } from "commander";
 
-import { awaitAtMost } from "../util/async";
 import { getServiceDeviceDescriptorUrl } from "../util/getServiceDeviceDescriptorUrl";
 import { AiosDevice, getAiosDevice } from "../util/getAiosDevice";
 import { findDevices } from "../util/findDevices";
-import { upnpService, upnpAddress, upnpPort } from "../env";
-import { entries } from "../util/object";
+import { upnpService, upnpAddress, upnpPort, outputPiped } from "../env";
 import {
   getOutput,
   logLevelOption,
   logLevels,
   type IOutput,
 } from "../util/commands";
+import { awaitAtMost } from "../util/async";
 
 type DiscoverArgs = {
   friendlyName?: string;
@@ -114,7 +113,7 @@ export const discover = new Command()
       args,
     );
 
-    const output = getOutput(logLevel);
+    const output = getOutput({ logLevel });
 
     output.debug(`main: Discovering devices`);
 
@@ -124,9 +123,24 @@ export const discover = new Command()
         timeout,
       );
 
-      entries(discovered).forEach(([name, value]) => {
-        output.log(`${name}: ${value}`);
-      });
+      if (outputPiped) {
+        output.log(JSON.stringify(discovered));
+        return;
+      }
+
+      const { hostname, port } = discovered;
+      const flattenedDevicesAndServices = discovered.devices.flatMap(
+        ({ serviceList, ...device }) => {
+          return serviceList.service.map((service) => ({
+            ...device,
+            hostname,
+            port,
+            pathname: service.controlURL,
+          }));
+        },
+      );
+
+      output.table(flattenedDevicesAndServices);
     } catch (err) {
       output.error(`main: Failed to discover devices: ${err}`);
     }

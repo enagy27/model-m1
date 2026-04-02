@@ -33,3 +33,13 @@ export const defaultAiosControlPathname = v.parse(
   v.optional(v.string(), "/ACT/control"),
   process.env.DEFAULT_AIOS_CONTROL_PATHNAME,
 );
+
+export const outputPiped = v.parse(
+  v.boolean(),
+  !process.stdout.isTTY,
+)
+
+export const inputPiped = v.parse(
+  v.boolean(),
+  !process.stdin.isTTY,
+)
