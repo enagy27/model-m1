@@ -1,7 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import * as v from "valibot";
 
-import { serializeHeaders } from "./tcp";
 import { upnpService } from "../env";
 import { IOutput } from "./output";
 import * as sockets from "./sockets";

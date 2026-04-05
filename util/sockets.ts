@@ -232,7 +232,7 @@ export async function request({
 
     function onResponse(this: void, response: ISocketResponse) {
       cleanup();
-      
+
       resolve(response);
       output.debug(
         `resolved with socket response: ${JSON.stringify(response, null, 2)}`,
@@ -241,7 +241,7 @@ export async function request({
 
     function onError(this: void, error: Error) {
       cleanup();
-      
+
       reject(error);
       output.error(`rejected with error: ${error}`);
     }
