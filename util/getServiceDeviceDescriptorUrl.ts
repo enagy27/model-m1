@@ -1,4 +1,5 @@
-import * as sockets from "./sockets";
+import { fromEntries } from "./object";
+import { IOutput } from "./output";
 import { search } from "./upnp";
 
 export type DeviceData = {
@@ -27,12 +28,6 @@ type IDgramSocket = {
   off(this: void, eventName: "error", listener: (err: Error) => void): void;
 };
 
-type IOutput = {
-  log(this: void, info: string): void;
-  debug(this: void, info: string): void;
-  error(this: void, err: string): void;
-};
-
 type GetServiceDeviceDescriptorUrlArgs = {
   host: string;
   socket: IDgramSocket;
@@ -56,13 +51,13 @@ export async function getServiceDeviceDescriptorUrl({
   output,
 }: GetServiceDeviceDescriptorUrlArgs): Promise<string> {
   return new Promise((resolve, reject) => {
-    function cleanup() {
+    const cleanup = () => {
       socket.off("listening", onListening);
       socket.off("message", onMessage);
       socket.off("error", onError);
-    }
+    };
 
-    function onListening() {
+    function onListening(this: void) {
       const searchMessage = search({ host, service });
 
       output.debug(
@@ -72,39 +67,38 @@ export async function getServiceDeviceDescriptorUrl({
 
       // fire once
       socket.off("listening", onListening);
-    }
+    };
 
-    function onMessage(messageBuffer: { toString: () => string }) {
-      const message = messageBuffer.toString();
+    function onMessage(this: void, buffer: { toString: () => string }) {
+      const message = buffer.toString();
 
-      try {
-        const { headers } = sockets.response(message);
-        const { ST, LOCATION } = headers;
-        output.debug(
-          `getServiceDeviceDescriptorUrl: Message received on UPNP socket with ST="${ST}" and LOCATION="${LOCATION}"`,
-        );
+      const [, ...headerLines] = message.split("\r\n");
+      const headers = fromEntries(headerLines.map((line): [string, string | undefined] => {
+        const [key, ...valueParts] = line.split(":");
 
-        if (ST !== service || !LOCATION) {
-          return;
-        }
+        return [key, valueParts.join(":").trim()] as const;
+      }))
 
-        resolve(LOCATION);
+      const { ST, LOCATION } = headers;
+      output.debug(
+        `getServiceDeviceDescriptorUrl: Message received on UPNP socket with ST="${ST}" and LOCATION="${LOCATION}"`,
+      );
 
-        cleanup();
-      } catch (error) {
-        output.error(
-          `getServiceDeviceDescriptorUrl: Failed to parse message on UPNP socket`,
-        );
+      if (ST !== service || !LOCATION) {
         return;
       }
-    }
 
-    function onError(err: Error) {
+      resolve(LOCATION);
+
+      cleanup();
+    };
+
+    function onError(this:void, err: Error) {
       output.error(`getServiceDeviceDescriptorUrl: UPNP socket error ${err}`);
       reject(err);
 
       cleanup();
-    }
+    };
 
     socket.on("listening", onListening);
     socket.on("message", onMessage);

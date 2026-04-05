@@ -1,0 +1,94 @@
+import net from "net";
+import * as v from "valibot";
+import { Command, InvalidOptionArgumentError } from "commander";
+import { XMLParser } from "fast-xml-parser";
+import XMLBuilder from "fast-xml-builder";
+
+import { control } from "../util/control";
+import {
+  defaultAiosControlPort,
+  defaultAiosControlPathname,
+  inputPiped,
+} from "../env";
+import { read as readStream } from "../util/streams";
+import { getOutput } from "../util/output";
+import * as discover from "./discover";
+import * as options from "../util/options";
+import { Renewable } from "../util/Renewable";
+
+const getConfigInputSchema = v.tuple([
+  v.object({
+    hostname: v.optional(v.pipe(v.string(), v.ipv4())),
+    port: v.optional(v.number(), defaultAiosControlPort),
+    pathname: v.optional(v.string(), defaultAiosControlPathname),
+    logLevel: v.picklist(options.logLevels),
+  }),
+]);
+
+const getConfigSchema = v.pipe(
+  getConfigInputSchema,
+  v.transform(([options]) => ({ ...options })),
+);
+
+const pipedInputSchema = discover.pipedOutputSchema;
+
+export const getConfig = new Command("get-config")
+  .description("Reads the current state of the config.")
+  .addOption(options.hostname)
+  .addOption(options.port)
+  .addOption(options.pathname)
+  .addOption(options.logLevel)
+  .action(async (...args: unknown[]) => {
+    const stdinData = inputPiped ? await readStream(process.stdin) : undefined;
+    const parsedPipedInputs = v.safeParse(pipedInputSchema, stdinData);
+    const pipedInputs = parsedPipedInputs.success
+      ? parsedPipedInputs.output
+      : {};
+
+    const {
+      logLevel,
+      hostname = pipedInputs.hostname,
+      port = pipedInputs.port ?? defaultAiosControlPort,
+      pathname = pipedInputs.pathname ?? defaultAiosControlPathname,
+    } = v.parse(getConfigSchema, args);
+
+    if (hostname == null) {
+      throw new InvalidOptionArgumentError(
+        `"hostname" is required. It can be retrieved using the "discover" command and can be piped to the "get-config" command directly as "discover | get-config"`,
+      );
+    }
+
+    const output = getOutput({ logLevel });
+
+    const socket = new Renewable({
+      create: () => new net.Socket(),
+      destroy: (instance) => instance.destroy(),
+    });
+
+    const parser = new XMLParser({ ignoreAttributes: false });
+    const builder = new XMLBuilder({ ignoreAttributes: false });
+
+    const controller = control({
+      host: `${hostname}:${port}`,
+      pathname,
+      output,
+      parse: (data) => parser.parse(data),
+      build: (data) => builder.build(data),
+      socket: {
+        write: (data) => socket.current.write(data),
+        on: (eventName, cb) => socket.current.on(eventName, cb),
+        off: (eventName, cb) => socket.current.off(eventName, cb),
+        connect: (cb) => socket.current.connect(port, hostname, cb),
+        destroy: () => socket.renew(),
+      },
+    });
+
+    try {
+      output.debug(JSON.stringify(await controller("GetAudioConfig"), null, 2));
+      output.debug(JSON.stringify(await controller("GetLEDConfig"), null, 2));
+      output.debug(JSON.stringify(await controller("GetTvConfig"), null, 2));
+      output.debug(JSON.stringify(await controller("GetVolumeLimit"), null, 2));
+    } finally {
+      socket.destroy();
+    }
+  });

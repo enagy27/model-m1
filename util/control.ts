@@ -1,14 +1,10 @@
-import XMLBuilder from "fast-xml-builder";
+import { XMLParser } from "fast-xml-parser";
 import * as v from "valibot";
 
-import { serializeHeaders } from "./tcp";
 import { upnpService } from "../env";
-
-type IOutput = {
-  log(this: void, info: string): void;
-  debug(this: void, info: string): void;
-  error(this: void, err: string): void;
-};
+import { IOutput } from "./output";
+import * as sockets from "./sockets";
+import type { ISocket } from "./sockets";
 
 const primitiveSchema = v.union([
   v.bigint(),
@@ -16,13 +12,6 @@ const primitiveSchema = v.union([
   v.number(),
   v.string(),
 ]);
-
-export type ControlArgs = {
-  readonly host: string;
-  readonly pathname: string;
-  write(message: string): void;
-  readonly output: IOutput;
-};
 
 type OutputMode = "STEREO"; // or double mono?
 type SoundMode = "DIRECT" | "STEREO" | "VIRTUAL";
@@ -63,66 +52,6 @@ type IndividualLEDConfig = NetworkLEDConfig | TouchLEDConfig;
 
 /** Controls LEDs on the front of the device showing network status and touch response */
 export type LEDConfig = { led: IndividualLEDConfig[] };
-
-/**
- * Config for syncing audio and video. Applies an artificial delay to audio signal to
- * account for slower video processing.
- */
-type LowLatencyConfig = {
-  enabled: 0 | 1;
-  /** Delay time in milliseconds */
-  delay: number;
-};
-
-type NetworkConfiguration = {
-  "@_id": string;
-  "@_dhcpOn": "0" | "1";
-  "@_enabled": "true" | "false";
-  Name: "eth0" | "wlan0";
-  Type: "LAN" | "WLAN";
-  IP: string;
-  Netmask: string;
-  Gateway: string;
-  DNS1: string;
-  DNS2: string;
-  DNS3: string;
-  gwMac: string;
-  wirelessProfile?: WirelessProfile;
-};
-
-type SpeakerChannel = {
-  distance: number;
-  level: number;
-  test_tone: 0 | 1;
-};
-
-type StereoSpeakerGroup = {
-  enabled: 0 | 1;
-  crossover: number;
-  Right: SpeakerChannel;
-  Left: SpeakerChannel;
-};
-
-type CenterSpeakerGroup = {
-  enabled: 0 | 1;
-  crossover: number;
-  Center: SpeakerChannel;
-};
-
-type SubwooferGroup = {
-  enabled: 0 | 1;
-  lowpass: number; // Hz
-  phase: number; // degrees (0 or 180 typically)
-  Subwoofer: SpeakerChannel;
-};
-
-type SurroundSpeakerConfig = {
-  Front: StereoSpeakerGroup;
-  Center: CenterSpeakerGroup;
-  Subwoofer: SubwooferGroup;
-  Rear: StereoSpeakerGroup;
-  DistUnit: "m" | "ft";
-};
 
 export type TvConfig = {
   input: string;
@@ -200,96 +129,243 @@ export type TvConfig = {
   tvRemoteCodes: 0 | 1;
 };
 
-type WirelessProfile = {
-  "@_SSID": string;
-  wirelessSecurity: {
-    "@_enabled": "true" | "false";
-    Mode: "WPA2-AES" | "WPA3" | "WEP" | "OPEN" | string;
-  };
-};
+const binaryBooleanSchema = v.picklist([0, 1]);
+
+const csvList = v.pipe(
+  v.string(),
+  v.transform((values) => values.split(",")),
+);
+
+const audioConfigSchema = v.object({
+  highpass: v.number(),
+  lowpass: v.number(),
+  subwooferEnable: binaryBooleanSchema,
+  outputMode: v.string(),
+  ampBridged: binaryBooleanSchema,
+  soundMode: v.string(),
+  availableSoundModes: csvList,
+  sourceDirect: binaryBooleanSchema,
+  bassBoost: v.number(),
+  speakerOption: v.string(),
+  toneControlOption: v.unknown(),
+  tilt: v.number(),
+  digitalFilter: v.string(),
+  availableDigitalFilter: csvList,
+  diracHistory: binaryBooleanSchema,
+  diracFilterList: v.optional(
+    v.object({
+      filter1: v.optional(v.string()),
+      filter2: v.optional(v.string()),
+      filter3: v.optional(v.string()),
+    }),
+  ),
+  diracActiveFilter: v.optional(v.string()),
+});
+
+const LEDConfigSchema = v.object({
+  led: v.tuple([
+    v.object({ name: v.literal("NETWORK"), brightness: v.number() }),
+    v.object({
+      name: v.literal("TOUCH"),
+      feedbackSoundsEnable: binaryBooleanSchema,
+      enable: binaryBooleanSchema,
+    }),
+  ]),
+});
+
+const tvConfigSchema = v.looseObject({
+  input: v.string(),
+  connectedInputs: v.string(),
+  hdmiVolume: v.number(),
+  hdmiConnection: v.string(),
+  remoteVolume: v.number(),
+  autoPlay: binaryBooleanSchema,
+  irFlasherFeedback: binaryBooleanSchema,
+  allowZoning: binaryBooleanSchema,
+  dialogueEnhance: v.object({
+    level: v.number(),
+    enabled: binaryBooleanSchema,
+  }),
+  nightMode: v.object({
+    level: v.number(),
+    enabled: binaryBooleanSchema,
+  }),
+  audioDelay: v.number(),
+  syncMode: v.string(),
+  bilingualMode: v.string(),
+  irCodeVolPlus: v.number(),
+  irCodeVolMinus: v.number(),
+  irCodeMute: v.number(),
+  irCodeAux: v.number(),
+  irCodeLine: v.number(),
+  irCodeAnalog: v.number(),
+  irCodeAnalog1: v.number(),
+  irCodeAnalog2: v.number(),
+  irCodeCd: v.number(),
+  irCodeRecorder: v.number(),
+  irCodeCoaxial: v.number(),
+  irCodeOptical: v.number(),
+  irCodeOptical1: v.number(),
+  irCodeOptical2: v.number(),
+  irCodeOptical3: v.number(),
+  irCodeHdmi: v.number(),
+  irCodeHdmiArc: v.number(),
+  irCodeHdmi1: v.number(),
+  irCodeHdmi2: v.number(),
+  irCodeHdmi3: v.number(),
+  irCodeHdmi4: v.number(),
+  irCodeQuickSel1: v.number(),
+  irCodeQuickSel2: v.number(),
+  irCodeQuickSel3: v.number(),
+  irCodeQuickSel4: v.number(),
+  irCodeQuickSel5: v.number(),
+  irCodeQuickSel6: v.number(),
+  irCodePowerToggle: v.number(),
+  irCodePowerOn: v.number(),
+  irCodePowerOff: v.number(),
+  irCodeTv: v.number(),
+  irCodeBluetooth: v.number(),
+  irCodeSubwooferPlus: v.number(),
+  irCodeSubwooferMinus: v.number(),
+  irCodeBassPlus: v.number(),
+  irCodeBassMinus: v.number(),
+  irCodeNightMode: v.number(),
+  irCodeDialogue: v.number(),
+  irCodeSoundMovie: v.number(),
+  irCodeSoundMusic: v.number(),
+  irCodeSoundPure: v.number(),
+  irCodeSoundStereo: v.number(),
+  irCodeSoundDirect: v.number(),
+  irCodeSoundVirtual: v.number(),
+  irCodeDigitalFilter: v.number(),
+  dtsDialogControl: v.object({
+    level: v.number(),
+    enabled: binaryBooleanSchema,
+    max: v.number(),
+  }),
+  tvRemoteCodes: binaryBooleanSchema,
+});
+
+function responseBodySchema<T extends v.ObjectEntries>(entries: T) {
+  return v.object({
+    "s:Envelope": v.object({
+      "s:Body": v.object(entries),
+    }),
+  });
+}
+
+const parser = new XMLParser({ ignoreAttributes: false });
+const decodeXml = (data: string) => parser.parse(data);
+
+const encodedAudioConfig = v.pipe(
+  v.string(),
+  v.transform(decodeXml),
+  v.object({ AudioConfig: audioConfigSchema }),
+);
+
+const encodedLEDConfig = v.pipe(
+  v.string(),
+  v.transform(decodeXml),
+  v.object({ LEDConfig: LEDConfigSchema }),
+);
+
+const encodedTvConfig = v.pipe(
+  v.string(),
+  v.transform(decodeXml),
+  v.object({ TvConfig: tvConfigSchema }),
+);
+
+const getAudioConfigResponseBodySchema = responseBodySchema({
+  "u:GetAudioConfigResponse": v.object({
+    AudioConfig: encodedAudioConfig,
+  }),
+});
+
+const getLEDConfigResponseBodySchema = responseBodySchema({
+  "u:GetLEDConfigResponse": v.object({
+    LEDConfig: encodedLEDConfig,
+  }),
+});
+
+const getTvConfigResponseBodySchema = responseBodySchema({
+  "u:GetTvConfigResponse": v.object({
+    TvConfig: encodedTvConfig,
+  }),
+});
+
+const getVolumeLimitResponseBodySchema = responseBodySchema({
+  "u:GetVolumeLimitResponse": v.object({
+    VolumeLimit: v.unknown(),
+  }),
+});
 
 type ControlRequests = {
-  // Configuration Token
-  GetConfigurationToken: never;
-  ApplyChanges: { configurationToken: string };
-  CancelChanges: { configurationToken: string };
-  ReleaseConfigurationToken: { configurationToken: string };
-
-  // Firmware
-  CancelFirmwareUpgrade: never;
-  CheckForFirmwareUpgrade: never;
-  GetUpgradeProgress: never;
-  GetUpgradeStatus: never;
-  UpdateFirmware: { configurationToken: string };
-
-  // Network
-  GetAccessPointList: { configurationToken: string };
-  GetActiveInterface: never;
-  GetNetworkConfiguration: { networkConfigurationId: string };
-  GetNetworkConfigurationList: never;
-  SetNetworkConfiguration: {
-    configurationToken: string;
-    networkConfiguration: Partial<NetworkConfiguration>;
-  };
-  GetWirelessProfile: never;
-  GetWirelessState: never;
-  GetWirelessStatus: never;
-  SetWirelessProfile: {
-    configurationToken: string;
-    wirelessProfile: Partial<WirelessProfile>;
-  };
-  SetWPSPinSSID: { configurationToken: string; wpsPinSSID: string };
-  GetP2PMode: never;
-  GetHEOSNetID: never;
-  SetHEOSNetID: { configurationToken: string; HEOSNetID: string };
-
   // Audio
   GetAudioConfig: never;
   SetAudioConfig: { AudioConfig: { AudioConfig: Partial<AudioConfig> } };
   GetVolumeLimit: never;
   SetVolumeLimit: { VolumeLimit: number };
-  GetSurroundSpeakerConfig: never;
-  SetSurroundSpeakerConfig: {
-    SurroundSpeakerConfig: {
-      SurroundSpeakerConfig: Partial<SurroundSpeakerConfig>;
-    };
-  };
-  GetLowLatencyConfig: never;
-  SetLowLatencyConfig: { LowLatencyConfig: Partial<LowLatencyConfig> };
+  // GetLowLatencyConfig: never;
+  // SetLowLatencyConfig: { LowLatencyConfig: Partial<LowLatencyConfig> };
 
   // Device Settings
-  GetConfigurationStatus: never;
-  SetConfigurationStatus: { configurationStatus: number };
-  GetCurrentState: never;
-  GetFriendlyName: never;
-  SetFriendlyName: { configurationToken: string; friendlyName: string };
   GetLEDConfig: never;
   SetLEDConfig: { LEDConfig: { LEDConfig: Partial<LEDConfig> } };
-  GetTranscode: never;
-  SetTranscode: { transcode: boolean };
 
   // TV Config
   GetTvConfig: never;
   SetTvConfig: { TvConfig: Partial<TvConfig> };
 };
 
+const controlResponseSchemas = {
+  // Audio
+  GetAudioConfig: getAudioConfigResponseBodySchema,
+  SetAudioConfig: v.unknown(),
+  GetVolumeLimit: getVolumeLimitResponseBodySchema,
+  SetVolumeLimit: v.unknown(),
+  // GetLowLatencyConfig: unknown;
+  // SetLowLatencyConfig: unknown;
+
+  // Device Settings
+  GetLEDConfig: getLEDConfigResponseBodySchema,
+  SetLEDConfig: v.unknown(),
+
+  // TV Config
+  GetTvConfig: getTvConfigResponseBodySchema,
+  SetTvConfig: v.unknown(),
+};
+
 type ControlRequestArgs<K extends keyof ControlRequests> =
   ControlRequests[K] extends never ? [K] : [K, ControlRequests[K]];
 
-export function control({ host, pathname, write, output }: ControlArgs) {
-  const builder = new XMLBuilder({ ignoreAttributes: false });
+export type ControlArgs = {
+  readonly socket: ISocket;
+  readonly host: string;
+  readonly pathname: string;
+  readonly output: IOutput;
+  parse(this: void, data: string): unknown;
+  build(this: void, data: unknown): string;
+};
 
+export function control({
+  socket,
+  output,
+  host,
+  pathname,
+  build,
+  parse,
+}: ControlArgs) {
   function createBody<K extends keyof ControlRequests>(
     action: K,
     data: ControlRequests[K] | {},
-  ) {
+  ): string {
     const actionArgs = Object.fromEntries(
       Object.entries(data).map(([argName, value]: [string, unknown]) => {
         if (v.is(primitiveSchema, value)) {
           return [argName, value] as const;
         }
 
-        return [argName, builder.build(value)] as const;
+        return [argName, build(value)] as const;
       }),
     );
 
@@ -309,7 +385,7 @@ export function control({ host, pathname, write, output }: ControlArgs) {
     };
 
     // Include the CRLF so that it is calculated as part of the CONTENT-LENGTH
-    return `${builder.build(body)}\r\n`;
+    return `${build(body)}\r\n`;
   }
 
   return async function controlRequest<K extends keyof ControlRequests>(
@@ -324,25 +400,27 @@ export function control({ host, pathname, write, output }: ControlArgs) {
     const body = createBody(action, data);
 
     const contentLength = Buffer.byteLength(body);
-    const headers = Object.entries({
+    const headers = {
       HOST: host,
       "CONTENT-LENGTH": `${contentLength}`,
-      "Accept-Ranges": "bytes",
+      "ACCEPT-RANGES": "bytes",
       "CONTENT-TYPE": `text/xml; charset="utf-8"`,
       SOAPACTION: `"${upnpService}#${action}"`,
       "USER-AGENT": `marantz-model-m1-remote/1.0.0`,
+    };
+
+    const response = await sockets.request({
+      socket,
+      output,
+      method: "POST",
+      pathname,
+      headers,
+      body,
     });
 
-    const command = [
-      `POST ${pathname} HTTP/1.1`,
-      serializeHeaders(headers),
-      "",
-      body,
-    ].join("\r\n");
+    const xml = response.body ? parse(response.body) : undefined;
 
-    write(command);
-
-    output.debug(`control: wrote command: ${command}`);
+    return v.parse(controlResponseSchemas[action], xml);
   };
 }
 
