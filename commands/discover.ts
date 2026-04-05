@@ -8,11 +8,10 @@ import { findDevices } from "../util/findDevices";
 import { upnpService, upnpAddress, upnpPort, outputPiped } from "../env";
 import {
   getOutput,
-  logLevelOption,
-  logLevels,
   type IOutput,
-} from "../util/commands";
+} from "../util/output";
 import { awaitAtMost } from "../util/async";
+import * as options from "../util/options"
 
 type DiscoverArgs = {
   friendlyName?: string;
@@ -86,7 +85,7 @@ const discoverInputSchema = v.tuple([
     friendlyName: v.optional(v.string()),
     modelName: v.optional(v.string()),
     timeout: v.number(),
-    logLevel: v.picklist(logLevels),
+    logLevel: v.picklist(options.logLevels),
   }),
 ]);
 
@@ -99,6 +98,46 @@ const discoverSchema = v.pipe(
   })),
 );
 
+export const pipedOutputSchema = v.pipe(
+  v.optional(v.string()),
+  v.transform((stdin) => {
+    if (stdin == null) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(stdin);
+    } catch {
+      return undefined;
+    }
+  }),
+  v.optional(
+    v.object({
+      hostname: v.pipe(v.string(), v.ipv4()),
+      port: v.number(),
+      devices: v.array(
+        v.object({
+          serviceList: v.object({
+            service: v.array(v.object({ controlURL: v.string() })),
+          }),
+        }),
+      ),
+    }),
+  ),
+  v.transform((data) => {
+    if (!data) {
+      return {};
+    }
+
+    const { hostname, port, devices } = data;
+    const [pathname] = devices.flatMap((device) => {
+      return device.serviceList.service.map(({ controlURL }) => controlURL);
+    });
+
+    return { hostname, port, pathname };
+  }),
+);
+
 export const discover = new Command()
   .name("discover")
   .description(
@@ -106,7 +145,7 @@ export const discover = new Command()
   )
   .option("--friendlyName <NAME>", "The in-app name of the amplifier")
   .option("--timeout <VALUE>", "Discovery timeout in seconds", Number, 5)
-  .addOption(logLevelOption)
+  .addOption(options.logLevel)
   .action(async (...args: unknown[]) => {
     const { friendlyName, modelName, timeout, logLevel } = v.parse(
       discoverSchema,
@@ -114,8 +153,6 @@ export const discover = new Command()
     );
 
     const output = getOutput({ logLevel });
-
-    output.debug(`main: Discovering devices`);
 
     try {
       const discovered = await awaitAtMost(
@@ -142,6 +179,6 @@ export const discover = new Command()
 
       output.table(flattenedDevicesAndServices);
     } catch (err) {
-      output.error(`main: Failed to discover devices: ${err}`);
+      output.error(`Failed to discover devices: ${err}`);
     }
   });
