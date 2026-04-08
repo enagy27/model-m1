@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { Command } from "commander";
 
 import { getServiceDeviceDescriptorUrl } from "../util/getServiceDeviceDescriptorUrl";
-import { AiosDevice, getAiosDevice } from "../util/getAiosDevice";
+import { type AiosDevice, getAiosDevice } from "../util/getAiosDevice";
 import { findDevices } from "../util/findDevices";
 import { upnpService, upnpAddress, upnpPort, outputPiped } from "../env";
 import {

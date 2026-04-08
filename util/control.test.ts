@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import { XMLParser } from "fast-xml-parser";
 import XMLBuilder from "fast-xml-builder";
 
-import { control, ControlArgs } from "./control";
+import { control, type ControlArgs } from "./control";
 import type { IOutput } from "./output";
 import type { ISocket } from "./sockets";
 

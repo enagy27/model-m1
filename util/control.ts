@@ -2,7 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as v from "valibot";
 
 import { upnpService } from "../env";
-import { IOutput } from "./output";
+import type { IOutput } from "./output";
 import * as sockets from "./sockets";
 import type { ISocket } from "./sockets";
 
@@ -12,30 +12,6 @@ const primitiveSchema = v.union([
   v.number(),
   v.string(),
 ]);
-
-type OutputMode = "STEREO"; // or double mono?
-type SoundMode = "DIRECT" | "STEREO" | "VIRTUAL";
-
-/** Audio settings for things like filters and sound modes */
-export type AudioConfig = {
-  highpass: 40 | 80 | 90 | 100 | 110 | 120 | 150 | 200 | 250; // or off?
-  lowpass: 40 | 60 | 80 | 90 | 100 | 110 | 120; // can I shut this off?
-  subwooferEnable: unknown;
-  outputMode: OutputMode;
-  ampBridged: unknown;
-  soundMode: SoundMode;
-  impedance: unknown;
-  ampPower: unknown;
-  availableSoundModes: "DIRECT,STEREO,VIRTUAL";
-  sourceDirect: unknown;
-  bassBoost: unknown;
-  speakerOption: "NORMAL"; // others?
-  toneControlOption: unknown;
-  tilt: unknown;
-  digitalFilter: "FILTER_1" | "FILTER_2";
-  availableDigitalFilter: "FILTER_1,FILTER_2";
-  diracHistory: unknown;
-};
 
 export type NetworkLEDConfig = {
   name: "NETWORK";
@@ -52,82 +28,6 @@ type IndividualLEDConfig = NetworkLEDConfig | TouchLEDConfig;
 
 /** Controls LEDs on the front of the device showing network status and touch response */
 export type LEDConfig = { led: IndividualLEDConfig[] };
-
-export type TvConfig = {
-  input: string;
-  connectedInputs: string;
-  hdmiVolume: 0 | 1;
-  hdmiConnection: "ARC" | "eARC" | unknown;
-  remoteVolume: 0 | 1;
-  autoPlay: 0 | 1;
-  irFlasherFeedback: 0 | 1;
-  allowZoning: 0 | 1;
-  dialogueEnhance: {
-    level: number; // 0-2?
-    enabled: 0 | 1;
-  };
-  nightMode: {
-    level: number;
-    enabled: 0 | 1;
-  };
-  audioDelay: number;
-  syncMode: "VIDEO" | "AUDIO" | string;
-  bilingualMode: "MAIN_VOICE" | "SUB_VOICE" | string;
-
-  /** IR Codes (0 = not learned) */
-  irCodeVolPlus: number;
-  irCodeVolMinus: number;
-  irCodeMute: number;
-  irCodeAux: number;
-  irCodeLine: number;
-  irCodeAnalog: number;
-  irCodeAnalog1: number;
-  irCodeAnalog2: number;
-  irCodeCd: number;
-  irCodeRecorder: number;
-  irCodeCoaxial: number;
-  irCodeOptical: number;
-  irCodeOptical1: number;
-  irCodeOptical2: number;
-  irCodeOptical3: number;
-  irCodeHdmi: number;
-  irCodeHdmiArc: number;
-  irCodeHdmi1: number;
-  irCodeHdmi2: number;
-  irCodeHdmi3: number;
-  irCodeHdmi4: number;
-  irCodeQuickSel1: number;
-  irCodeQuickSel2: number;
-  irCodeQuickSel3: number;
-  irCodeQuickSel4: number;
-  irCodeQuickSel5: number;
-  irCodeQuickSel6: number;
-  irCodePowerToggle: number;
-  irCodePowerOn: number;
-  irCodePowerOff: number;
-  irCodeTv: number;
-  irCodeBluetooth: number;
-  irCodeSubwooferPlus: number;
-  irCodeSubwooferMinus: number;
-  irCodeBassPlus: number;
-  irCodeBassMinus: number;
-  irCodeNightMode: number;
-  irCodeDialogue: number;
-  irCodeSoundMovie: number;
-  irCodeSoundMusic: number;
-  irCodeSoundPure: number;
-  irCodeSoundStereo: number;
-  irCodeSoundDirect: number;
-  irCodeSoundVirtual: number;
-  irCodeDigitalFilter: number;
-
-  dtsDialogControl: {
-    level: number;
-    enabled: 0 | 1;
-    max: number;
-  };
-  tvRemoteCodes: 0 | 1;
-};
 
 const binaryBooleanSchema = v.picklist([0, 1]);
 
@@ -162,15 +62,19 @@ const audioConfigSchema = v.object({
   diracActiveFilter: v.optional(v.string()),
 });
 
+export type AudioConfig = v.InferOutput<typeof audioConfigSchema>;
+
 const LEDConfigSchema = v.object({
-  led: v.tuple([
-    v.object({ name: v.literal("NETWORK"), brightness: v.number() }),
-    v.object({
-      name: v.literal("TOUCH"),
-      feedbackSoundsEnable: binaryBooleanSchema,
-      enable: binaryBooleanSchema,
-    }),
-  ]),
+  led: v.array(
+    v.union([
+      v.object({ name: v.literal("NETWORK"), brightness: v.number() }),
+      v.object({
+        name: v.literal("TOUCH"),
+        feedbackSoundsEnable: binaryBooleanSchema,
+        enable: binaryBooleanSchema,
+      }),
+    ]),
+  ),
 });
 
 const tvConfigSchema = v.looseObject({
@@ -246,6 +150,8 @@ const tvConfigSchema = v.looseObject({
   tvRemoteCodes: binaryBooleanSchema,
 });
 
+export type TvConfig = v.InferOutput<typeof tvConfigSchema>;
+
 function responseBodySchema<T extends v.ObjectEntries>(entries: T) {
   return v.object({
     "s:Envelope": v.object({
@@ -295,7 +201,7 @@ const getTvConfigResponseBodySchema = responseBodySchema({
 
 const getVolumeLimitResponseBodySchema = responseBodySchema({
   "u:GetVolumeLimitResponse": v.object({
-    VolumeLimit: v.unknown(),
+    VolumeLimit: v.number(),
   }),
 });
 

@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { entries, fromEntries } from "./object";
-import { IOutput } from "./output";
+import type { IOutput } from "./output";
 import { serializeHeaders } from "./tcp";
 
 export type ISocketResponse = {

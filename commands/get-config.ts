@@ -15,6 +15,7 @@ import { getOutput } from "../util/output";
 import * as discover from "./discover";
 import * as options from "../util/options";
 import { Renewable } from "../util/Renewable";
+import { getReceiverSettingsFromConfigs } from "../util/getReceiverSettingsFromConfigs";
 
 const getConfigInputSchema = v.tuple([
   v.object({
@@ -84,10 +85,34 @@ export const getConfig = new Command("get-config")
     });
 
     try {
-      output.debug(JSON.stringify(await controller("GetAudioConfig"), null, 2));
-      output.debug(JSON.stringify(await controller("GetLEDConfig"), null, 2));
-      output.debug(JSON.stringify(await controller("GetTvConfig"), null, 2));
-      output.debug(JSON.stringify(await controller("GetVolumeLimit"), null, 2));
+      const audioConfigEnvelope = await controller("GetAudioConfig");
+      const ledConfigEnvelope = await controller("GetLEDConfig");
+      const tvConfigEnvelope = await controller("GetTvConfig");
+      const volumeLimitEnvelope = await controller("GetVolumeLimit");
+
+      const audioConfigResponse =
+        audioConfigEnvelope["s:Envelope"]["s:Body"]["u:GetAudioConfigResponse"];
+      const ledConfigResponse =
+        ledConfigEnvelope["s:Envelope"]["s:Body"]["u:GetLEDConfigResponse"];
+      const tvConfigResponse =
+        tvConfigEnvelope["s:Envelope"]["s:Body"]["u:GetTvConfigResponse"];
+      const volumeLimitResponse =
+        volumeLimitEnvelope["s:Envelope"]["s:Body"]["u:GetVolumeLimitResponse"];
+
+      const { AudioConfig } = audioConfigResponse.AudioConfig;
+      const { LEDConfig } = ledConfigResponse.LEDConfig;
+      const { TvConfig } = tvConfigResponse.TvConfig;
+      const { VolumeLimit } = volumeLimitResponse;
+
+      const config = getReceiverSettingsFromConfigs({
+        audioConfig: AudioConfig,
+        ledConfig: LEDConfig,
+        tvConfig: TvConfig,
+        volumeLimit: VolumeLimit,
+        output,
+      });
+
+      output.log(JSON.stringify(config, null, 2));
     } finally {
       socket.destroy();
     }

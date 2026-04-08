@@ -6,15 +6,14 @@ import { Command, InvalidOptionArgumentError } from "commander";
 import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
 
-import { control, ControlInstance } from "../util/control";
+import { control, type ControlInstance } from "../util/control";
 import {
   defaultAiosControlPort,
   defaultAiosControlPathname,
   inputPiped,
 } from "../env";
-import * as sockets from "../util/sockets";
 import {
-  ReceiverSettings,
+  type ReceiverSettings,
   receiverSettingsSchema,
 } from "../util/receiverSettings";
 import { getConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings";

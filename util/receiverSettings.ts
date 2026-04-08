@@ -3,6 +3,23 @@ import * as v from "valibot";
 export const receiverSettingsSchema = v.partial(
   v.object({
     /**
+     * Choose how to process sound.
+     * 
+     * Direct: bypass processing
+     * Stereo: downmix to two channel audio (plus subwoofer)
+     * Virtual: simulated 5.1 audio
+     */
+    soundMode: v.picklist(["direct", "stereo", "virtual"]),
+    /**
+     * Adjusts how much loud dialog is relative to other sounds
+     */
+    dialogEnhancement: v.picklist(["off", "low", "medium", "high"]),
+    /**
+     * When enabled, reduces the dynamic range of output audio to achieve
+     * a homogeneous loudness level.
+     */
+    nightMode: v.picklist(["off", "on"]),
+    /**
      * Choose how to distribute high-bitrate audio sources such as WAV or PCM
      * (including audio from external inputs) when playing in multi-room groups.
      *

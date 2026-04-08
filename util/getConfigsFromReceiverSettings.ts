@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { type ReceiverSettings } from "./receiverSettings";
-import {
+import type {
   AudioConfig,
   LEDConfig,
   NetworkLEDConfig,
@@ -9,7 +9,7 @@ import {
 } from "./control";
 import {
   isEmptyObject,
-  NonNullishValues,
+  type NonNullishValues,
   removeNullishValueEntries,
 } from "./object";
 
