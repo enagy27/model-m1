@@ -1,5 +1,5 @@
 import { fromEntries } from "./object";
-import { IOutput } from "./output";
+import type { IOutput } from "./output";
 import { search } from "./upnp";
 
 export type DeviceData = {
