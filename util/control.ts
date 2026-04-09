@@ -77,7 +77,7 @@ const LEDConfigSchema = v.object({
   ),
 });
 
-const tvConfigSchema = v.looseObject({
+const tvConfigSchema = v.object({
   input: v.string(),
   connectedInputs: v.string(),
   hdmiVolume: v.number(),
@@ -152,6 +152,13 @@ const tvConfigSchema = v.looseObject({
 
 export type TvConfig = v.InferOutput<typeof tvConfigSchema>;
 
+const lowLatencyConfigSchema = v.object({
+  enabled: binaryBooleanSchema,
+  delay: v.number(),
+});
+
+export type LowLatencyConfig = v.InferOutput<typeof lowLatencyConfigSchema>;
+
 function responseBodySchema<T extends v.ObjectEntries>(entries: T) {
   return v.object({
     "s:Envelope": v.object({
@@ -181,6 +188,12 @@ const encodedTvConfig = v.pipe(
   v.object({ TvConfig: tvConfigSchema }),
 );
 
+const encodedLowLatencyConfig = v.pipe(
+  v.string(),
+  v.transform(decodeXml),
+  v.object({ LowLatencyConfig: lowLatencyConfigSchema }),
+);
+
 const getAudioConfigResponseBodySchema = responseBodySchema({
   "u:GetAudioConfigResponse": v.object({
     AudioConfig: encodedAudioConfig,
@@ -190,6 +203,18 @@ const getAudioConfigResponseBodySchema = responseBodySchema({
 const getLEDConfigResponseBodySchema = responseBodySchema({
   "u:GetLEDConfigResponse": v.object({
     LEDConfig: encodedLEDConfig,
+  }),
+});
+
+const getLowLatencyConfigResponseBodySchema = responseBodySchema({
+  "u:GetLowLatencyConfigResponse": v.object({
+    LowLatencyConfig: encodedLowLatencyConfig,
+  }),
+});
+
+const getTranscodeResponseBodySchema = responseBodySchema({
+  "u:GetTranscodeResponse": v.object({
+    transcode: binaryBooleanSchema,
   }),
 });
 
@@ -209,10 +234,12 @@ type ControlRequests = {
   // Audio
   GetAudioConfig: never;
   SetAudioConfig: { AudioConfig: { AudioConfig: Partial<AudioConfig> } };
+  GetLowLatencyConfig: never;
+  SetLowLatencyConfig: { LowLatencyConfig: Partial<LowLatencyConfig> };
+  GetTranscode: never;
+  SetTranscode: { transcode: number };
   GetVolumeLimit: never;
   SetVolumeLimit: { VolumeLimit: number };
-  // GetLowLatencyConfig: never;
-  // SetLowLatencyConfig: { LowLatencyConfig: Partial<LowLatencyConfig> };
 
   // Device Settings
   GetLEDConfig: never;
@@ -227,10 +254,12 @@ const controlResponseSchemas = {
   // Audio
   GetAudioConfig: getAudioConfigResponseBodySchema,
   SetAudioConfig: v.unknown(),
+  GetLowLatencyConfig: getLowLatencyConfigResponseBodySchema,
+  SetLowLatencyConfig: v.unknown(),
+  GetTranscode: getTranscodeResponseBodySchema,
+  SetTranscode: v.unknown(),
   GetVolumeLimit: getVolumeLimitResponseBodySchema,
   SetVolumeLimit: v.unknown(),
-  // GetLowLatencyConfig: unknown;
-  // SetLowLatencyConfig: unknown;
 
   // Device Settings
   GetLEDConfig: getLEDConfigResponseBodySchema,

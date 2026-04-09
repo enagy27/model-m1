@@ -4,7 +4,7 @@ export const receiverSettingsSchema = v.partial(
   v.object({
     /**
      * Choose how to process sound.
-     * 
+     *
      * Direct: bypass processing
      * Stereo: downmix to two channel audio (plus subwoofer)
      * Virtual: simulated 5.1 audio
@@ -31,9 +31,7 @@ export const receiverSettingsSchema = v.partial(
      * to other rooms. Do not use this option unless your devices are connected
      * via ethernet or if all grouped devices are using an excellent wifi signal.
      */
-    multiRoomAudioQuality: v.picklist([
-      /* "normal", "high" */
-    ]),
+    multiRoomAudioQuality: v.picklist(["normal", "high"]),
     /**
      * Adjust the front status LED brightness.
      */
@@ -47,9 +45,7 @@ export const receiverSettingsSchema = v.partial(
      * Quick start: the device responds immediately and never sleeps. This consumes
      * more energy.
      */
-    energyMode: v.picklist([
-      /* "autoSleep", "quickStart" */
-    ]),
+    // energyMode: v.picklist(["autoSleep", "quickStart"]),
     /**
      * Limiting volume can protect speakers if volume levels exceed the power
      * capabilities of your speakers.
@@ -73,10 +69,14 @@ export const receiverSettingsSchema = v.partial(
      */
     digitalFilter: v.picklist(["filter1", "filter2"]),
     /**
+     * Apply different dirac live filters.
+     */
+    diracLiveFilter: v.picklist(["filter1", "filter2", "filter3"]),
+    /**
      * Biases towards the left speaker (negative values) or towards the right speaker
      * (positive values).
      */
-    balance: v.unknown(),
+    balance: v.pipe(v.number(), v.minValue(-20), v.maxValue(20)),
     /**
      * Determines whether audio will be split into two channels or duplicated by each
      * speaker.
@@ -89,9 +89,7 @@ export const receiverSettingsSchema = v.partial(
     /**
      * Determines which source to use as audio for the TV.
      */
-    tvInput: v.picklist([
-      /* "auto", "hdmi", "optical", "none" */
-    ]),
+    tvInput: v.picklist(["auto", "hdmi", "optical", "none"]),
     /**
      * Determines whether TV audio source will be switched to by default once active.
      */

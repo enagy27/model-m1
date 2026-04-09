@@ -1,4 +1,5 @@
 {
+  "editor.formatOnSave": true,
   "json.schemas": [
     {
       "fileMatch": ["preset.json", "*.preset.json"],

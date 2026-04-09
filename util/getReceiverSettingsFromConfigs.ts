@@ -1,7 +1,7 @@
-import type { Primitive } from "type-fest";
 import type {
   AudioConfig,
   LEDConfig,
+  LowLatencyConfig,
   TouchLEDConfig,
   TvConfig,
 } from "./control";
@@ -23,7 +23,9 @@ type ReceiverSettingsResponse = Omit<
 type GetReceiverSettingsFromConfigsArgs = {
   audioConfig: AudioConfig;
   ledConfig: LEDConfig;
+  lowLatencyConfig: LowLatencyConfig;
   tvConfig: TvConfig;
+  transcode: boolean;
   volumeLimit: number;
   output: IOutput;
 };
@@ -103,10 +105,71 @@ function getTouchControls({
   return feedbackSoundsEnable ? "onWithSound" : "on";
 }
 
+function getDigitalFilter(
+  digitalFilter: AudioConfig["digitalFilter"],
+): ReceiverSettings["digitalFilter"] {
+  switch (digitalFilter) {
+    case "FILTER_1": {
+      return "filter1";
+    }
+
+    case "FILTER_2": {
+      return "filter2";
+    }
+
+    default: {
+      return undefined;
+    }
+  }
+}
+
+function getDiracLiveFilter(
+  diracActiveFilter: AudioConfig["diracActiveFilter"],
+): ReceiverSettings["diracLiveFilter"] {
+  switch (diracActiveFilter) {
+    case "filter1":
+    case "filter2":
+    case "filter3": {
+      return diracActiveFilter;
+    }
+
+    default: {
+      return undefined;
+    }
+  }
+}
+
+function getTvInput(input: TvConfig["input"]): ReceiverSettings["tvInput"] {
+  // expecting: OPTICAL, HDMI-ARC, ANY, NONE
+  switch (input.toLowerCase()) {
+    case "any": {
+      return "auto";
+    }
+
+    case "hdmi-arc": {
+      return "hdmi";
+    }
+
+    case "optical": {
+      return "optical";
+    }
+
+    case "none": {
+      return "none";
+    }
+
+    default: {
+      return undefined;
+    }
+  }
+}
+
 export function getReceiverSettingsFromConfigs({
   audioConfig,
   ledConfig,
+  lowLatencyConfig,
   tvConfig,
+  transcode,
   volumeLimit,
   output,
 }: GetReceiverSettingsFromConfigsArgs): ReceiverSettingsResponse {
@@ -130,20 +193,30 @@ export function getReceiverSettingsFromConfigs({
     soundMode,
     dialogEnhancement,
     nightMode,
-    // multiRoomAudioQuality
+    multiRoomAudioQuality: transcode ? "normal" : "high",
     statusLedBrightness: networkLED?.brightness,
-    // energyMode?
-    // TODO: this does not toggle the limit, just sets the value
+    // energyMode? may not be working in the app? May be another port?
     volumeLimit,
     touchControls: touchLED ? getTouchControls(touchLED) : undefined,
-    // subwooferLevel:
+    // subwooferLevel? /upnp/control/renderer_dvc/RenderingControl
+    // <u:X_SetSubwoofer xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
+    // <InstanceID>0</InstanceID>
+    // <Channel>Master</Channel>
+    // <DesiredLevel>18</DesiredLevel>
+    // </u:X_SetSubwoofer>
     lowPassFilter: audioConfig.lowpass,
-    digitalFilter: audioConfig.digitalFilter,
-    // balance?
+    digitalFilter: getDigitalFilter(audioConfig.digitalFilter),
+    diracLiveFilter: getDiracLiveFilter(audioConfig.diracActiveFilter),
+    // balance? /upnp/control/renderer_dvc/RenderingControl
+    // <u:X_SetBalance xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
+    // <InstanceID>0</InstanceID>
+    // <Channel>Master</Channel>
+    // <DesiredBalance>24</DesiredBalance>
+    // </u:X_SetBalance>
     highPassFilter: audioConfig.highpass,
-    // tvInput
+    tvInput: getTvInput(tvConfig.input),
     tvAutoplay: tvConfig.autoPlay ? "on" : "off",
     tvRemoteCodes: tvConfig.tvRemoteCodes ? "on" : "off",
-    // audioDelay: TvConfig.audioDelay,
+    audioDelay: lowLatencyConfig.enabled ? lowLatencyConfig.delay : 0,
   };
 }
