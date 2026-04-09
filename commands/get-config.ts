@@ -87,27 +87,39 @@ export const getConfig = new Command("get-config")
     try {
       const audioConfigEnvelope = await controller("GetAudioConfig");
       const ledConfigEnvelope = await controller("GetLEDConfig");
+      const lowLatencyConfigEnvelope = await controller("GetLowLatencyConfig");
       const tvConfigEnvelope = await controller("GetTvConfig");
+      const transcodeEnvelope = await controller("GetTranscode");
       const volumeLimitEnvelope = await controller("GetVolumeLimit");
 
       const audioConfigResponse =
         audioConfigEnvelope["s:Envelope"]["s:Body"]["u:GetAudioConfigResponse"];
       const ledConfigResponse =
         ledConfigEnvelope["s:Envelope"]["s:Body"]["u:GetLEDConfigResponse"];
+      const lowLatencyConfigResponse =
+        lowLatencyConfigEnvelope["s:Envelope"]["s:Body"][
+          "u:GetLowLatencyConfigResponse"
+        ];
       const tvConfigResponse =
         tvConfigEnvelope["s:Envelope"]["s:Body"]["u:GetTvConfigResponse"];
+      const transcodeResponse =
+        transcodeEnvelope["s:Envelope"]["s:Body"]["u:GetTranscodeResponse"];
       const volumeLimitResponse =
         volumeLimitEnvelope["s:Envelope"]["s:Body"]["u:GetVolumeLimitResponse"];
 
       const { AudioConfig } = audioConfigResponse.AudioConfig;
       const { LEDConfig } = ledConfigResponse.LEDConfig;
+      const { LowLatencyConfig } = lowLatencyConfigResponse.LowLatencyConfig;
       const { TvConfig } = tvConfigResponse.TvConfig;
+      const {transcode} = transcodeResponse;
       const { VolumeLimit } = volumeLimitResponse;
 
       const config = getReceiverSettingsFromConfigs({
         audioConfig: AudioConfig,
         ledConfig: LEDConfig,
+        lowLatencyConfig: LowLatencyConfig,
         tvConfig: TvConfig,
+        transcode: Boolean(transcode),
         volumeLimit: VolumeLimit,
         output,
       });
