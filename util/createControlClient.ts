@@ -2,16 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as v from "valibot";
 
 import { upnpService } from "../env";
-import type { IOutput } from "./output";
-import * as sockets from "./sockets";
-import type { ISocket } from "./sockets";
-
-const primitiveSchema = v.union([
-  v.bigint(),
-  v.boolean(),
-  v.number(),
-  v.string(),
-]);
+import { createEndpoint } from "./createEndpoint";
 
 export type NetworkLEDConfig = {
   name: "NETWORK";
@@ -270,93 +261,44 @@ const controlResponseSchemas = {
   SetTvConfig: v.unknown(),
 };
 
-type ControlRequestArgs<K extends keyof ControlRequests> =
-  ControlRequests[K] extends never ? [K] : [K, ControlRequests[K]];
+const controlResponses = {
+  // Audio
+  GetAudioConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.GetAudioConfig, body),
+  SetAudioConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.SetAudioConfig, body),
+  GetLowLatencyConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.GetLowLatencyConfig, body),
+  SetLowLatencyConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.SetLowLatencyConfig, body),
+  GetTranscode: (body: unknown) =>
+    v.parse(controlResponseSchemas.GetTranscode, body),
+  SetTranscode: (body: unknown) =>
+    v.parse(controlResponseSchemas.SetTranscode, body),
+  GetVolumeLimit: (body: unknown) =>
+    v.parse(controlResponseSchemas.GetVolumeLimit, body),
+  SetVolumeLimit: (body: unknown) =>
+    v.parse(controlResponseSchemas.SetVolumeLimit, body),
 
-export type ControlArgs = {
-  readonly socket: ISocket;
-  readonly host: string;
-  readonly pathname: string;
-  readonly output: IOutput;
-  parse(this: void, data: string): unknown;
-  build(this: void, data: unknown): string;
+  // Device Settings
+  GetLEDConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.GetLEDConfig, body),
+  SetLEDConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.SetLEDConfig, body),
+
+  // TV Config
+  GetTvConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.GetTvConfig, body),
+  SetTvConfig: (body: unknown) =>
+    v.parse(controlResponseSchemas.SetTvConfig, body),
 };
 
-export function control({
-  socket,
-  output,
-  host,
-  pathname,
-  build,
-  parse,
-}: ControlArgs) {
-  function createBody<K extends keyof ControlRequests>(
-    action: K,
-    data: ControlRequests[K] | {},
-  ): string {
-    const actionArgs = Object.fromEntries(
-      Object.entries(data).map(([argName, value]: [string, unknown]) => {
-        if (v.is(primitiveSchema, value)) {
-          return [argName, value] as const;
-        }
+export const createControlClient = createEndpoint<
+  ControlRequests,
+  typeof controlResponses
+>({
+  service: upnpService,
+  responses: controlResponses,
+});
 
-        return [argName, build(value)] as const;
-      }),
-    );
-
-    const body = {
-      "s:Envelope": {
-        "@_xmlns:s": "http://schemas.xmlsoap.org/soap/envelope/",
-        "@_s:encodingStyle": "http://schemas.xmlsoap.org/soap/encoding/",
-
-        "s:Body": {
-          [`u:${action}`]: {
-            "@_xmlns:u": upnpService,
-
-            ...actionArgs,
-          },
-        },
-      },
-    };
-
-    // Include the CRLF so that it is calculated as part of the CONTENT-LENGTH
-    return `${build(body)}\r\n`;
-  }
-
-  return async function controlRequest<K extends keyof ControlRequests>(
-    ...args: ControlRequestArgs<K>
-  ) {
-    const [action, data = {}] = args;
-
-    output.debug(
-      `control: invoking action="${action}" with data: ${JSON.stringify(data, null, 2)}`,
-    );
-
-    const body = createBody(action, data);
-
-    const contentLength = Buffer.byteLength(body);
-    const headers = {
-      HOST: host,
-      "CONTENT-LENGTH": `${contentLength}`,
-      "ACCEPT-RANGES": "bytes",
-      "CONTENT-TYPE": `text/xml; charset="utf-8"`,
-      SOAPACTION: `"${upnpService}#${action}"`,
-      "USER-AGENT": `marantz-model-m1-remote/1.0.0`,
-    };
-
-    const response = await sockets.request({
-      socket,
-      output,
-      method: "POST",
-      pathname,
-      headers,
-      body,
-    });
-
-    const xml = response.body ? parse(response.body) : undefined;
-
-    return v.parse(controlResponseSchemas[action], xml);
-  };
-}
-
-export type ControlInstance = ReturnType<typeof control>;
+export type ControlClient = ReturnType<typeof createControlClient>;

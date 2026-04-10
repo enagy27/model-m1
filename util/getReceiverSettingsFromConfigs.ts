@@ -4,7 +4,7 @@ import type {
   LowLatencyConfig,
   TouchLEDConfig,
   TvConfig,
-} from "./control";
+} from "./createControlClient";
 import type { IOutput } from "./output";
 import type { ReceiverSettings } from "./receiverSettings";
 

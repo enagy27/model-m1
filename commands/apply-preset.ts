@@ -6,7 +6,10 @@ import { Command, InvalidOptionArgumentError } from "commander";
 import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
 
-import { control, type ControlInstance } from "../util/control";
+import {
+  createControlClient,
+  type ControlClient,
+} from "../util/createControlClient";
 import {
   defaultAiosControlPort,
   defaultAiosControlPathname,
@@ -53,13 +56,13 @@ async function readSettingsFile({
 }
 
 type ApplySettingsArgs = {
-  controller: ControlInstance;
+  controlClient: ControlClient;
   receiverSettings: ReceiverSettings;
   output: IOutput;
 };
 
 async function applySettings({
-  controller,
+  controlClient,
   receiverSettings,
   output,
 }: ApplySettingsArgs) {
@@ -82,28 +85,28 @@ async function applySettings({
 
     switch (command) {
       case "AudioConfig": {
-        await controller("SetAudioConfig", {
+        await controlClient("SetAudioConfig", {
           AudioConfig: { AudioConfig: config },
         });
         break;
       }
 
       case "LEDConfig": {
-        await controller("SetLEDConfig", {
+        await controlClient("SetLEDConfig", {
           LEDConfig: { LEDConfig: config },
         });
         break;
       }
 
       case "TVConfig": {
-        await controller("SetTvConfig", {
+        await controlClient("SetTvConfig", {
           TvConfig: config,
         });
         break;
       }
 
       case "VolumeLimit": {
-        await controller("SetVolumeLimit", {
+        await controlClient("SetVolumeLimit", {
           VolumeLimit: config,
         });
         break;
@@ -178,7 +181,7 @@ export const applyPreset = new Command("apply-preset")
     const builder = new XMLBuilder({ ignoreAttributes: false });
     const parser = new XMLParser({ ignoreAttributes: false });
 
-    const controller = control({
+    const controlClient = createControlClient({
       host: `${hostname}:${port}`,
       pathname,
       output,
@@ -194,7 +197,7 @@ export const applyPreset = new Command("apply-preset")
     });
 
     try {
-      await applySettings({ controller, receiverSettings, output });
+      await applySettings({ controlClient, receiverSettings, output });
     } finally {
       socket.destroy();
     }

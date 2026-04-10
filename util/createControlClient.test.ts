@@ -3,9 +3,10 @@ import { EventEmitter } from "node:events";
 import { XMLParser } from "fast-xml-parser";
 import XMLBuilder from "fast-xml-builder";
 
-import { control, type ControlArgs } from "./control";
+import { createControlClient } from "./createControlClient";
 import type { IOutput } from "./output";
 import type { ISocket } from "./sockets";
+import type { CreateClientArgs } from "./createEndpoint";
 
 const parser = new XMLParser({ ignoreAttributes: false });
 const builder = new XMLBuilder({ ignoreAttributes: false });
@@ -53,11 +54,11 @@ describe("control", () => {
       parse: (data) => parser.parse(data),
       output,
       socket,
-    } satisfies ControlArgs;
+    } satisfies CreateClientArgs;
 
-    const controller = control(controlArgs);
+    const controlClient = createControlClient(controlArgs);
 
-    const audioConfigResponse = await controller("GetAudioConfig");
+    const audioConfigResponse = await controlClient("GetAudioConfig");
 
     expect(socket.write).toHaveBeenCalledWith(
       [
