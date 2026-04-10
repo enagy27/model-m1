@@ -6,7 +6,7 @@ import type {
   NetworkLEDConfig,
   TouchLEDConfig,
   TvConfig,
-} from "./control";
+} from "./createControlClient";
 import {
   isEmptyObject,
   type NonNullishValues,

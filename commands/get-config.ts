@@ -4,7 +4,7 @@ import { Command, InvalidOptionArgumentError } from "commander";
 import { XMLParser } from "fast-xml-parser";
 import XMLBuilder from "fast-xml-builder";
 
-import { control } from "../util/control";
+import { createControlClient } from "../util/createControlClient";
 import {
   defaultAiosControlPort,
   defaultAiosControlPathname,
@@ -71,7 +71,7 @@ export const getConfig = new Command("get-config")
     const parser = new XMLParser({ ignoreAttributes: false });
     const builder = new XMLBuilder({ ignoreAttributes: false });
 
-    const controller = control({
+    const controlClient = createControlClient({
       host: `${hostname}:${port}`,
       pathname,
       output,
@@ -102,12 +102,14 @@ export const getConfig = new Command("get-config")
     });
 
     try {
-      const audioConfigEnvelope = await controller("GetAudioConfig");
-      const ledConfigEnvelope = await controller("GetLEDConfig");
-      const lowLatencyConfigEnvelope = await controller("GetLowLatencyConfig");
-      const tvConfigEnvelope = await controller("GetTvConfig");
-      const transcodeEnvelope = await controller("GetTranscode");
-      const volumeLimitEnvelope = await controller("GetVolumeLimit");
+      const audioConfigEnvelope = await controlClient("GetAudioConfig");
+      const ledConfigEnvelope = await controlClient("GetLEDConfig");
+      const lowLatencyConfigEnvelope = await controlClient(
+        "GetLowLatencyConfig",
+      );
+      const tvConfigEnvelope = await controlClient("GetTvConfig");
+      const transcodeEnvelope = await controlClient("GetTranscode");
+      const volumeLimitEnvelope = await controlClient("GetVolumeLimit");
       const subwooferEnvelope = await renderControlClient("X_GetSubwoofer");
       const balanceEnvelope = await renderControlClient("X_GetBalance");
 
