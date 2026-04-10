@@ -21,6 +21,10 @@ export function findDevices(
         matchers.service,
       );
 
+      if (service.length < 1) {
+        return undefined;
+      }
+
       return {
         ...device,
         serviceList: { service },
