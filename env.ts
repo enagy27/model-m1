@@ -19,6 +19,11 @@ export const upnpService = v.parse(
   process.env.UPNP_SERVICE,
 );
 
+export const upnpRenderingControlService = v.parse(
+  v.optional(v.string(), "urn:schemas-upnp-org:service:RenderingControl:1"),
+  process.env.UPNP_RENDERING_CONTROL_SERVICE,
+);
+
 export const heosPort = v.parse(
   v.optional(numberAsString, `${1255}`),
   process.env.HEOS_PORT,
@@ -34,12 +39,11 @@ export const defaultAiosControlPathname = v.parse(
   process.env.DEFAULT_AIOS_CONTROL_PATHNAME,
 );
 
-export const outputPiped = v.parse(
-  v.boolean(),
-  !process.stdout.isTTY,
-)
+export const defaultRenderingControlPathname = v.parse(
+  v.optional(v.string(), "/upnp/control/renderer_dvc/RenderingControl"),
+  process.env.DEFAULT_RENDERING_CONTROL_PATHNAME,
+);
 
-export const inputPiped = v.parse(
-  v.boolean(),
-  !process.stdin.isTTY,
-)
+export const outputPiped = v.parse(v.boolean(), !process.stdout.isTTY);
+
+export const inputPiped = v.parse(v.boolean(), !process.stdin.isTTY);

@@ -9,6 +9,7 @@ import {
   defaultAiosControlPort,
   defaultAiosControlPathname,
   inputPiped,
+  defaultRenderingControlPathname,
 } from "../env";
 import { read as readStream } from "../util/streams";
 import { getOutput } from "../util/output";
@@ -16,6 +17,7 @@ import * as discover from "./discover";
 import * as options from "../util/options";
 import { Renewable } from "../util/Renewable";
 import { getReceiverSettingsFromConfigs } from "../util/getReceiverSettingsFromConfigs";
+import { createRenderControlClient } from "../util/createRenderControlClient";
 
 const getConfigInputSchema = v.tuple([
   v.object({
@@ -84,6 +86,21 @@ export const getConfig = new Command("get-config")
       },
     });
 
+    const renderControlClient = createRenderControlClient({
+      host: `${hostname}:${port}`,
+      pathname: defaultRenderingControlPathname,
+      output,
+      parse: (data) => parser.parse(data),
+      build: (data) => builder.build(data),
+      socket: {
+        write: (data) => socket.current.write(data),
+        on: (eventName, cb) => socket.current.on(eventName, cb),
+        off: (eventName, cb) => socket.current.off(eventName, cb),
+        connect: (cb) => socket.current.connect(port, hostname, cb),
+        destroy: () => socket.renew(),
+      },
+    });
+
     try {
       const audioConfigEnvelope = await controller("GetAudioConfig");
       const ledConfigEnvelope = await controller("GetLEDConfig");
@@ -91,6 +108,8 @@ export const getConfig = new Command("get-config")
       const tvConfigEnvelope = await controller("GetTvConfig");
       const transcodeEnvelope = await controller("GetTranscode");
       const volumeLimitEnvelope = await controller("GetVolumeLimit");
+      const subwooferEnvelope = await renderControlClient("X_GetSubwoofer");
+      const balanceEnvelope = await renderControlClient("X_GetBalance");
 
       const audioConfigResponse =
         audioConfigEnvelope["s:Envelope"]["s:Body"]["u:GetAudioConfigResponse"];
@@ -106,13 +125,19 @@ export const getConfig = new Command("get-config")
         transcodeEnvelope["s:Envelope"]["s:Body"]["u:GetTranscodeResponse"];
       const volumeLimitResponse =
         volumeLimitEnvelope["s:Envelope"]["s:Body"]["u:GetVolumeLimitResponse"];
+      const subwooferResponse =
+        subwooferEnvelope["s:Envelope"]["s:Body"]["u:X_GetSubwooferResponse"];
+      const balanceResponse =
+        balanceEnvelope["s:Envelope"]["s:Body"]["u:X_GetBalanceResponse"];
 
       const { AudioConfig } = audioConfigResponse.AudioConfig;
       const { LEDConfig } = ledConfigResponse.LEDConfig;
       const { LowLatencyConfig } = lowLatencyConfigResponse.LowLatencyConfig;
       const { TvConfig } = tvConfigResponse.TvConfig;
-      const {transcode} = transcodeResponse;
+      const { transcode } = transcodeResponse;
       const { VolumeLimit } = volumeLimitResponse;
+      const { CurrentLevel } = subwooferResponse;
+      const { CurrentBalance } = balanceResponse;
 
       const config = getReceiverSettingsFromConfigs({
         audioConfig: AudioConfig,
@@ -121,6 +146,8 @@ export const getConfig = new Command("get-config")
         tvConfig: TvConfig,
         transcode: Boolean(transcode),
         volumeLimit: VolumeLimit,
+        subwooferLevel: CurrentLevel,
+        balance: CurrentBalance,
         output,
       });
 

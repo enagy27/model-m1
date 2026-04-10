@@ -14,12 +14,17 @@ export function findDevices(
 ): Device[] {
   const { deviceList } = aiosDevice.root.device;
 
-  return ensureArray(deviceList.device).filter((device) => {
-    if (!matchers.device(device)) {
-      return false;
-    }
+  return ensureArray(deviceList.device)
+    .filter(matchers.device)
+    .map((device) => {
+      const service = ensureArray(device.serviceList.service).filter(
+        matchers.service,
+      );
 
-    const services = ensureArray(device.serviceList.service);
-    return services.some(matchers.service);
-  });
+      return {
+        ...device,
+        serviceList: { service },
+      };
+    })
+    .filter((device) => device != null);
 }
