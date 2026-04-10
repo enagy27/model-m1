@@ -27,6 +27,8 @@ type GetReceiverSettingsFromConfigsArgs = {
   tvConfig: TvConfig;
   transcode: boolean;
   volumeLimit: number;
+  subwooferLevel: number;
+  balance: number;
   output: IOutput;
 };
 
@@ -171,6 +173,8 @@ export function getReceiverSettingsFromConfigs({
   tvConfig,
   transcode,
   volumeLimit,
+  subwooferLevel,
+  balance,
   output,
 }: GetReceiverSettingsFromConfigsArgs): ReceiverSettingsResponse {
   const soundMode = getSoundMode(audioConfig.soundMode);
@@ -198,21 +202,11 @@ export function getReceiverSettingsFromConfigs({
     // energyMode? may not be working in the app? May be another port?
     volumeLimit,
     touchControls: touchLED ? getTouchControls(touchLED) : undefined,
-    // subwooferLevel? /upnp/control/renderer_dvc/RenderingControl
-    // <u:X_SetSubwoofer xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    // <InstanceID>0</InstanceID>
-    // <Channel>Master</Channel>
-    // <DesiredLevel>18</DesiredLevel>
-    // </u:X_SetSubwoofer>
+    subwooferLevel,
     lowPassFilter: audioConfig.lowpass,
     digitalFilter: getDigitalFilter(audioConfig.digitalFilter),
     diracLiveFilter: getDiracLiveFilter(audioConfig.diracActiveFilter),
-    // balance? /upnp/control/renderer_dvc/RenderingControl
-    // <u:X_SetBalance xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    // <InstanceID>0</InstanceID>
-    // <Channel>Master</Channel>
-    // <DesiredBalance>24</DesiredBalance>
-    // </u:X_SetBalance>
+    balance,
     highPassFilter: audioConfig.highpass,
     tvInput: getTvInput(tvConfig.input),
     tvAutoplay: tvConfig.autoPlay ? "on" : "off",

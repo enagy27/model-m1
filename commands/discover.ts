@@ -5,13 +5,16 @@ import { Command } from "commander";
 import { getServiceDeviceDescriptorUrl } from "../util/getServiceDeviceDescriptorUrl";
 import { type AiosDevice, getAiosDevice } from "../util/getAiosDevice";
 import { findDevices } from "../util/findDevices";
-import { upnpService, upnpAddress, upnpPort, outputPiped } from "../env";
 import {
-  getOutput,
-  type IOutput,
-} from "../util/output";
+  upnpService,
+  upnpAddress,
+  upnpPort,
+  outputPiped,
+  upnpRenderingControlService,
+} from "../env";
+import { getOutput, type IOutput } from "../util/output";
 import { awaitAtMost } from "../util/async";
-import * as options from "../util/options"
+import * as options from "../util/options";
 
 type DiscoverArgs = {
   friendlyName?: string;
@@ -72,7 +75,12 @@ async function discoverImpl({ friendlyName, modelName, output }: DiscoverArgs) {
         modelName ? device.modelName === modelName : true,
       ].every(Boolean);
     },
-    service: (service) => service.serviceType === upnpService,
+    service: ({ serviceType }) => {
+      return (
+        serviceType === upnpService ||
+        serviceType === upnpRenderingControlService
+      );
+    },
   });
 
   const { hostname, port } = new URL(deviceDescriptorUrl);
