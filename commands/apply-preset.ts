@@ -98,7 +98,7 @@ async function applySettings({
         break;
       }
 
-      case "TVConfig": {
+      case "TvConfig": {
         await controlClient("SetTvConfig", {
           TvConfig: config,
         });
