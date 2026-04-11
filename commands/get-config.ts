@@ -110,8 +110,6 @@ export const getConfig = new Command("get-config")
       const tvConfigEnvelope = await controlClient("GetTvConfig");
       const transcodeEnvelope = await controlClient("GetTranscode");
       const volumeLimitEnvelope = await controlClient("GetVolumeLimit");
-      const subwooferEnvelope = await renderControlClient("X_GetSubwoofer");
-      const balanceEnvelope = await renderControlClient("X_GetBalance");
 
       const audioConfigResponse =
         audioConfigEnvelope["s:Envelope"]["s:Body"]["u:GetAudioConfigResponse"];
@@ -127,10 +125,6 @@ export const getConfig = new Command("get-config")
         transcodeEnvelope["s:Envelope"]["s:Body"]["u:GetTranscodeResponse"];
       const volumeLimitResponse =
         volumeLimitEnvelope["s:Envelope"]["s:Body"]["u:GetVolumeLimitResponse"];
-      const subwooferResponse =
-        subwooferEnvelope["s:Envelope"]["s:Body"]["u:X_GetSubwooferResponse"];
-      const balanceResponse =
-        balanceEnvelope["s:Envelope"]["s:Body"]["u:X_GetBalanceResponse"];
 
       const { AudioConfig } = audioConfigResponse.AudioConfig;
       const { LEDConfig } = ledConfigResponse.LEDConfig;
@@ -138,18 +132,14 @@ export const getConfig = new Command("get-config")
       const { TvConfig } = tvConfigResponse.TvConfig;
       const { transcode } = transcodeResponse;
       const { VolumeLimit } = volumeLimitResponse;
-      const { CurrentLevel } = subwooferResponse;
-      const { CurrentBalance } = balanceResponse;
 
       const config = getReceiverSettingsFromConfigs({
-        audioConfig: AudioConfig,
-        ledConfig: LEDConfig,
-        lowLatencyConfig: LowLatencyConfig,
-        tvConfig: TvConfig,
-        transcode: Boolean(transcode),
-        volumeLimit: VolumeLimit,
-        subwooferLevel: CurrentLevel,
-        balance: CurrentBalance,
+        AudioConfig,
+        LEDConfig,
+        LowLatencyConfig,
+        TvConfig,
+        transcode,
+        VolumeLimit,
         output,
       });
 

@@ -10,7 +10,7 @@ import type { ReceiverSettings } from "./receiverSettings";
 
 type ReceiverSettingsResponseOverrides = {
   lowPassFilter?: number;
-  highPassFilter?: number;
+  highPassFilter?: number | "off";
   digitalFilter?: string;
 };
 
@@ -20,15 +20,24 @@ type ReceiverSettingsResponse = Omit<
 > &
   ReceiverSettingsResponseOverrides;
 
-type GetReceiverSettingsFromConfigsArgs = {
-  audioConfig: AudioConfig;
-  ledConfig: LEDConfig;
-  lowLatencyConfig: LowLatencyConfig;
-  tvConfig: TvConfig;
-  transcode: boolean;
-  volumeLimit: number;
-  subwooferLevel: number;
-  balance: number;
+export type GetReceiverSettingsFromConfigsArgs = {
+  AudioConfig: Pick<
+    AudioConfig,
+    | "digitalFilter"
+    | "diracActiveFilter"
+    | "highpass"
+    | "lowpass"
+    | "outputMode"
+    | "soundMode"
+  >;
+  LEDConfig: LEDConfig;
+  LowLatencyConfig: LowLatencyConfig;
+  TvConfig: Pick<
+    TvConfig,
+    "autoPlay" | "dialogueEnhance" | "input" | "nightMode" | "tvRemoteCodes"
+  >;
+  transcode: 0 | 1;
+  VolumeLimit: number;
   output: IOutput;
 };
 
@@ -141,6 +150,18 @@ function getDiracLiveFilter(
   }
 }
 
+function getOutputMode(outputMode: string): ReceiverSettings["outputMode"] {
+  switch (outputMode) {
+    case "STEREO": {
+      return "stereo";
+    }
+
+    default: {
+      return undefined;
+    }
+  }
+}
+
 function getTvInput(input: TvConfig["input"]): ReceiverSettings["tvInput"] {
   // expecting: OPTICAL, HDMI-ARC, ANY, NONE
   switch (input.toLowerCase()) {
@@ -167,29 +188,27 @@ function getTvInput(input: TvConfig["input"]): ReceiverSettings["tvInput"] {
 }
 
 export function getReceiverSettingsFromConfigs({
-  audioConfig,
-  ledConfig,
-  lowLatencyConfig,
-  tvConfig,
+  AudioConfig,
+  LEDConfig,
+  LowLatencyConfig,
+  TvConfig,
   transcode,
-  volumeLimit,
-  subwooferLevel,
-  balance,
+  VolumeLimit,
   output,
 }: GetReceiverSettingsFromConfigsArgs): ReceiverSettingsResponse {
-  const soundMode = getSoundMode(audioConfig.soundMode);
+  const soundMode = getSoundMode(AudioConfig.soundMode);
   if (soundMode == null) {
     output.debug(`unknown soundMode: ${soundMode}`);
   }
 
-  const dialogEnhancement = getDialogEnhancement(tvConfig.dialogueEnhance);
+  const dialogEnhancement = getDialogEnhancement(TvConfig.dialogueEnhance);
   if (dialogEnhancement == null) {
-    output.debug(`unknown dialogEnhance: ${tvConfig.dialogueEnhance}`);
+    output.debug(`unknown dialogEnhance: ${TvConfig.dialogueEnhance}`);
   }
 
-  const nightMode = getNightMode(tvConfig.nightMode);
+  const nightMode = getNightMode(TvConfig.nightMode);
 
-  const { led } = ledConfig;
+  const { led } = LEDConfig;
   const networkLED = led.find((diode) => diode.name === "NETWORK");
   const touchLED = led.find((diode) => diode.name === "TOUCH");
 
@@ -200,17 +219,18 @@ export function getReceiverSettingsFromConfigs({
     multiRoomAudioQuality: transcode ? "normal" : "high",
     statusLedBrightness: networkLED?.brightness,
     // energyMode? may not be working in the app? May be another port?
-    volumeLimit,
+    volumeLimit: VolumeLimit,
     touchControls: touchLED ? getTouchControls(touchLED) : undefined,
-    subwooferLevel,
-    lowPassFilter: audioConfig.lowpass,
-    digitalFilter: getDigitalFilter(audioConfig.digitalFilter),
-    diracLiveFilter: getDiracLiveFilter(audioConfig.diracActiveFilter),
-    balance,
-    highPassFilter: audioConfig.highpass,
-    tvInput: getTvInput(tvConfig.input),
-    tvAutoplay: tvConfig.autoPlay ? "on" : "off",
-    tvRemoteCodes: tvConfig.tvRemoteCodes ? "on" : "off",
-    audioDelay: lowLatencyConfig.enabled ? lowLatencyConfig.delay : 0,
+    // subwooferLevel? cannot get this value
+    lowPassFilter: AudioConfig.lowpass,
+    digitalFilter: getDigitalFilter(AudioConfig.digitalFilter),
+    diracLiveFilter: getDiracLiveFilter(AudioConfig.diracActiveFilter),
+    // balance? cannot get this value
+    outputMode: getOutputMode(AudioConfig.outputMode),
+    highPassFilter: AudioConfig.highpass || "off",
+    tvInput: getTvInput(TvConfig.input),
+    tvAutoplay: TvConfig.autoPlay ? "on" : "off",
+    tvRemoteCodes: TvConfig.tvRemoteCodes ? "on" : "off",
+    audioDelay: LowLatencyConfig.enabled ? LowLatencyConfig.delay : 0,
   };
 }

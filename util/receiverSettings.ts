@@ -36,15 +36,15 @@ export const receiverSettingsSchema = v.partial(
      * Adjust the front status LED brightness.
      */
     statusLedBrightness: v.pipe(v.number(), v.minValue(0), v.maxValue(100)),
-    /**
-     * Choose how the device uses energy.
-     *
-     * Auto sleep: the device uses less energie and will take longer to respond
-     * while it wakes.
-     *
-     * Quick start: the device responds immediately and never sleeps. This consumes
-     * more energy.
-     */
+    // /**
+    //  * Choose how the device uses energy.
+    //  *
+    //  * Auto sleep: the device uses less energie and will take longer to respond
+    //  * while it wakes.
+    //  *
+    //  * Quick start: the device responds immediately and never sleeps. This consumes
+    //  * more energy.
+    //  */
     // energyMode: v.picklist(["autoSleep", "quickStart"]),
     /**
      * Limiting volume can protect speakers if volume levels exceed the power
@@ -56,10 +56,11 @@ export const receiverSettingsSchema = v.partial(
      * sounds as feedback.
      */
     touchControls: v.picklist(["off", "on", "onWithSound"]),
-    /**
-     * Subwoofer equalization level.
-     */
-    subwooferLevel: v.pipe(v.number(), v.minValue(-15), v.maxValue(15)),
+    // /**
+    //  * Subwoofer equalization level.
+    //  */
+    // 0 to 30 on the server
+    // subwooferLevel: v.pipe(v.number(), v.minValue(-15), v.maxValue(15)),
     /**
      * Filter below which the subwoofer will be active.
      */
@@ -72,11 +73,19 @@ export const receiverSettingsSchema = v.partial(
      * Apply different dirac live filters.
      */
     diracLiveFilter: v.picklist(["filter1", "filter2", "filter3"]),
-    /**
-     * Biases towards the left speaker (negative values) or towards the right speaker
-     * (positive values).
-     */
-    balance: v.pipe(v.number(), v.minValue(-20), v.maxValue(20)),
+    // /**
+    //  * Bass equalization level.
+    //  */
+    // bass: v.pipe(v.number(), v.minValue(0), v.maxValue(10)),
+    // /**
+    //  * Treble equalization level.
+    //  */
+    // treble: v.pipe(v.number(), v.minValue(0), v.maxValue(10)),
+    // /**
+    //  * Biases towards the left speaker (negative values) or towards the right speaker
+    //  * (positive values).
+    //  */
+    // balance: v.pipe(v.number(), v.minValue(-20), v.maxValue(20)), // 0 to 40 on the server
     /**
      * Determines whether audio will be split into two channels or duplicated by each
      * speaker.
@@ -85,7 +94,7 @@ export const receiverSettingsSchema = v.partial(
     /**
      * Filter above which the left and right speakers will be active.
      */
-    highPassFilter: v.picklist([40, 80, 100, 110, 120]),
+    highPassFilter: v.picklist(["off", 40, 80, 100, 110, 120]),
     /**
      * Determines which source to use as audio for the TV.
      */
