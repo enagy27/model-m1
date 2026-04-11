@@ -9,7 +9,6 @@ import {
   defaultAiosControlPort,
   defaultAiosControlPathname,
   inputPiped,
-  defaultRenderingControlPathname,
 } from "../env";
 import { read as readStream } from "../util/streams";
 import { getOutput } from "../util/output";
@@ -17,7 +16,6 @@ import * as discover from "./discover";
 import * as options from "../util/options";
 import { Renewable } from "../util/Renewable";
 import { getReceiverSettingsFromConfigs } from "../util/getReceiverSettingsFromConfigs";
-import { createRenderControlClient } from "../util/createRenderControlClient";
 
 const getConfigInputSchema = v.tuple([
   v.object({
@@ -74,21 +72,6 @@ export const getConfig = new Command("get-config")
     const controlClient = createControlClient({
       host: `${hostname}:${port}`,
       pathname,
-      output,
-      parse: (data) => parser.parse(data),
-      build: (data) => builder.build(data),
-      socket: {
-        write: (data) => socket.current.write(data),
-        on: (eventName, cb) => socket.current.on(eventName, cb),
-        off: (eventName, cb) => socket.current.off(eventName, cb),
-        connect: (cb) => socket.current.connect(port, hostname, cb),
-        destroy: () => socket.renew(),
-      },
-    });
-
-    const renderControlClient = createRenderControlClient({
-      host: `${hostname}:${port}`,
-      pathname: defaultRenderingControlPathname,
       output,
       parse: (data) => parser.parse(data),
       build: (data) => builder.build(data),
