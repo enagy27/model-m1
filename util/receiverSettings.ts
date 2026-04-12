@@ -84,7 +84,7 @@ export const receiverSettingsSchema = v.partial(
     /**
      * Apply different dirac live filters.
      */
-    diracLiveFilter: v.picklist(["filter1", "filter2", "filter3"]),
+    diracLiveFilter: v.picklist(["off", "filter1", "filter2", "filter3"]),
     /**
      * Determines whether audio will be split into two channels or duplicated by each
      * speaker.

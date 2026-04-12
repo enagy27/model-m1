@@ -201,7 +201,19 @@ describe("getReceiverSettingsFromConfigs", () => {
     );
   });
 
-  it("diracLiveFilter", () => {
+  it("diracLiveFilter off", () => {
+    const configs = configsFixture({
+      AudioConfig: AudioConfigFixture({ diracActiveFilter: "off" }),
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(
+      receiverSettingsFixture({ diracLiveFilter: "off" }),
+    );
+  });
+
+  it("diracLiveFilter on", () => {
     const configs = configsFixture({
       AudioConfig: AudioConfigFixture({ diracActiveFilter: "filter3" }),
     });

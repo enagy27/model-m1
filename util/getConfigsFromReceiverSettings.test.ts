@@ -313,7 +313,17 @@ describe("getConfigsFromReceiverSettings", () => {
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
-  it("diracLiveFilter", () => {
+  it("diracLiveFilter off", () => {
+    const configs = getConfigsFromReceiverSettings({
+      diracLiveFilter: "off",
+    });
+
+    expect(configs).toEqual({
+      AudioConfig: { diracActiveFilter: "off" },
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("diracLiveFilter on", () => {
     const configs = getConfigsFromReceiverSettings({
       diracLiveFilter: "filter3",
     });
