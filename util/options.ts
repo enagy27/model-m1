@@ -10,9 +10,14 @@ export const port = new Option(
   "Port used for connecting to the device for control purposes",
 ).argParser(Number);
 
-export const pathname = new Option(
-  "--pathname <PATHNAME>",
-  "SOAP control endpoint",
+export const actControlUrl = new Option(
+  "--actControlUrl <URL>",
+  "act control endpoint",
+);
+
+export const renderingControlUrl = new Option(
+  "--renderingControlUrl <URL>",
+  "rendering control endpoint",
 );
 
 export const logLevels = ["info", "debug"] as const;

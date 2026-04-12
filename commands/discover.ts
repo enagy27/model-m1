@@ -15,6 +15,7 @@ import {
 import { getOutput, type IOutput } from "../util/output";
 import { awaitAtMost } from "../util/async";
 import * as options from "../util/options";
+import { fromEntries } from "../util/object";
 
 type DiscoverArgs = {
   friendlyName?: string;
@@ -126,7 +127,12 @@ export const pipedOutputSchema = v.pipe(
       devices: v.array(
         v.object({
           serviceList: v.object({
-            service: v.array(v.object({ controlURL: v.string() })),
+            service: v.array(
+              v.object({
+                serviceType: v.string(),
+                controlURL: v.string(),
+              }),
+            ),
           }),
         }),
       ),
@@ -138,11 +144,20 @@ export const pipedOutputSchema = v.pipe(
     }
 
     const { hostname, port, devices } = data;
-    const [pathname] = devices.flatMap((device) => {
-      return device.serviceList.service.map(({ controlURL }) => controlURL);
+
+    const serviceTypeToControlUrlEntries = devices.flatMap((device) => {
+      return device.serviceList.service.map(({ serviceType, controlURL }) => {
+        return [serviceType, controlURL] as const;
+      });
     });
 
-    return { hostname, port, pathname };
+    const serviceTypeToControlUrl = fromEntries(serviceTypeToControlUrlEntries);
+
+    const actControlUrl = serviceTypeToControlUrl[upnpService];
+    const renderingControlUrl =
+      serviceTypeToControlUrl[upnpRenderingControlService];
+
+    return { hostname, port, actControlUrl, renderingControlUrl };
   }),
 );
 
@@ -176,11 +191,12 @@ export const discover = new Command()
       const { hostname, port } = discovered;
       const flattenedDevicesAndServices = discovered.devices.flatMap(
         ({ serviceList, ...device }) => {
-          return serviceList.service.map((service) => ({
+          return serviceList.service.map(({ serviceType, controlURL }) => ({
             ...device,
             hostname,
             port,
-            pathname: service.controlURL,
+            serviceType,
+            controlURL,
           }));
         },
       );

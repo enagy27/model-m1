@@ -1,7 +1,7 @@
 {
   "soundMode": "stereo",
-  "dialogEnhancement": "off",
-  "nightMode": "off",
+  "dialogEnhancement": "medium",
+  "nightMode": "on",
   "bass": 0,
   "treble": 0,
   "balance": 0,

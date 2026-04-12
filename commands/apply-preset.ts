@@ -11,9 +11,10 @@ import {
   type ControlClient,
 } from "../util/createControlClient";
 import {
-  defaultAiosControlPort,
-  defaultAiosControlPathname,
+  defaultActControlPort,
+  defaultActControlUrl,
   inputPiped,
+  defaultRenderingControlUrl,
 } from "../env";
 import {
   type ReceiverSettings,
@@ -26,6 +27,11 @@ import { getOutput, type IOutput } from "../util/output";
 import * as discover from "./discover";
 import * as options from "../util/options";
 import { Renewable } from "../util/Renewable";
+import type { CreateClientArgs } from "../util/createEndpoint";
+import {
+  createRenderingControlClient,
+  type RenderingControlClient,
+} from "../util/createRenderingControlClient";
 
 type ReadSettingsFileArgs = {
   path: string;
@@ -57,12 +63,14 @@ async function readSettingsFile({
 
 type ApplySettingsArgs = {
   controlClient: ControlClient;
+  renderingControlClient: RenderingControlClient;
   receiverSettings: ReceiverSettings;
   output: IOutput;
 };
 
 async function applySettings({
   controlClient,
+  renderingControlClient,
   receiverSettings,
   output,
 }: ApplySettingsArgs) {
@@ -98,9 +106,23 @@ async function applySettings({
         break;
       }
 
+      case "LowLatencyConfig": {
+        await controlClient("SetLowLatencyConfig", {
+          LowLatencyConfig: config,
+        });
+        break;
+      }
+
       case "TvConfig": {
         await controlClient("SetTvConfig", {
           TvConfig: config,
+        });
+        break;
+      }
+
+      case "transcode": {
+        await controlClient("SetTranscode", {
+          transcode: config,
         });
         break;
       }
@@ -111,6 +133,47 @@ async function applySettings({
         });
         break;
       }
+
+      case "Balance": {
+        await renderingControlClient("X_SetBalance", {
+          InstanceID: 0,
+          Channel: "Master",
+          DesiredBalance: config,
+        });
+        break;
+      }
+
+      case "Bass": {
+        await renderingControlClient("X_SetBass", {
+          InstanceID: 0,
+          Channel: "Master",
+          DesiredBass: config,
+        });
+        break;
+      }
+
+      case "Subwoofer": {
+        await renderingControlClient("X_SetSubwoofer", {
+          InstanceID: 0,
+          Channel: "Master",
+          DesiredLevel: config,
+        });
+        break;
+      }
+
+      case "Treble": {
+        await renderingControlClient("X_SetTreble", {
+          InstanceID: 0,
+          Channel: "Master",
+          DesiredTreble: config,
+        });
+        break;
+      }
+
+      default: {
+        output.debug(`No applySettings handler for ${command}`);
+        break;
+      }
     }
   }
 }
@@ -119,8 +182,9 @@ const applyPresetInputSchema = v.tuple([
   v.string(),
   v.object({
     hostname: v.optional(v.pipe(v.string(), v.ipv4())),
-    port: v.optional(v.number(), defaultAiosControlPort),
-    pathname: v.optional(v.string(), defaultAiosControlPathname),
+    port: v.optional(v.number(), defaultActControlPort),
+    actControlUrl: v.optional(v.string(), defaultActControlUrl),
+    renderingControlUrl: v.optional(v.string(), defaultRenderingControlUrl),
     logLevel: v.picklist(options.logLevels),
   }),
 ]);
@@ -139,7 +203,8 @@ export const applyPreset = new Command("apply-preset")
   .argument("<file>", "Preset settings file")
   .addOption(options.hostname)
   .addOption(options.port)
-  .addOption(options.pathname)
+  .addOption(options.actControlUrl)
+  .addOption(options.renderingControlUrl)
   .addOption(options.logLevel)
   .action(async (...args: unknown[]) => {
     const stdinData = inputPiped ? await readStream(process.stdin) : undefined;
@@ -152,8 +217,10 @@ export const applyPreset = new Command("apply-preset")
       settingsFile,
       logLevel,
       hostname = pipedInputs.hostname,
-      port = pipedInputs.port ?? defaultAiosControlPort,
-      pathname = pipedInputs.pathname ?? defaultAiosControlPathname,
+      port = pipedInputs.port ?? defaultActControlPort,
+      actControlUrl = pipedInputs.actControlUrl ?? defaultActControlUrl,
+      renderingControlUrl = pipedInputs.renderingControlUrl ??
+        defaultRenderingControlUrl,
     } = v.parse(applyPresetSchema, args);
 
     if (hostname == null) {
@@ -181,12 +248,11 @@ export const applyPreset = new Command("apply-preset")
     const builder = new XMLBuilder({ ignoreAttributes: false });
     const parser = new XMLParser({ ignoreAttributes: false });
 
-    const controlClient = createControlClient({
+    const clientArgs = {
       host: `${hostname}:${port}`,
-      pathname,
       output,
-      build: (data) => builder.build(data),
       parse: (data) => parser.parse(data),
+      build: (data) => builder.build(data),
       socket: {
         write: (data) => socket.current.write(data),
         on: (eventName, cb) => socket.current.on(eventName, cb),
@@ -194,10 +260,25 @@ export const applyPreset = new Command("apply-preset")
         connect: (cb) => socket.current.connect(port, hostname, cb),
         destroy: () => socket.renew(),
       },
+    } satisfies Omit<CreateClientArgs, "pathname">;
+
+    const controlClient = createControlClient({
+      ...clientArgs,
+      pathname: actControlUrl,
+    });
+
+    const renderingControlClient = createRenderingControlClient({
+      ...clientArgs,
+      pathname: renderingControlUrl,
     });
 
     try {
-      await applySettings({ controlClient, receiverSettings, output });
+      await applySettings({
+        controlClient,
+        renderingControlClient,
+        receiverSettings,
+        output,
+      });
     } finally {
       socket.destroy();
     }

@@ -5,7 +5,7 @@ import { upnpRenderingControlService } from "../env";
 
 // NOTE: type inference breaks when trying to move these out to a shared type,
 // so we accept the repetition for InstanceID and Channel
-type RenderControlRequest = {
+type RenderingControlRequest = {
   X_GetSubwoofer: { InstanceID: 0; Channel: "Master" };
   X_SetSubwoofer: { InstanceID: 0; Channel: "Master"; DesiredLevel: number };
 
@@ -77,12 +77,14 @@ const responses = {
   X_SetBass: (body: unknown) => v.parse(responseSchemas.X_SetBass, body),
 };
 
-export const createRenderControlClient = createEndpoint<
-  RenderControlRequest,
+export const createRenderingControlClient = createEndpoint<
+  RenderingControlRequest,
   typeof responses
 >({
   service: upnpRenderingControlService,
   responses,
 });
 
-export type RenderControlClient = ReturnType<typeof createRenderControlClient>;
+export type RenderingControlClient = ReturnType<
+  typeof createRenderingControlClient
+>;
