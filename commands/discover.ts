@@ -170,12 +170,11 @@ export const discover = new Command()
   .option("--timeout <VALUE>", "Discovery timeout in seconds", Number, 5)
   .addOption(options.logLevel)
   .action(async (...args: unknown[]) => {
-    const { friendlyName, modelName, timeout, logLevel } = v.parse(
-      discoverSchema,
-      args,
-    );
+    const inputs = v.parse(discoverSchema, args);
 
+    const { friendlyName, modelName, timeout, logLevel } = inputs;
     const output = getOutput({ logLevel });
+    output.debug(`discover input: ${JSON.stringify(inputs, null, 2)}`);
 
     try {
       const discovered = await awaitAtMost(

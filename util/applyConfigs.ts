@@ -1,25 +1,22 @@
 import { type ControlClient } from "../util/createControlClient";
-import { type ReceiverSettings } from "../util/receiverSettings";
-import { getConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings";
-import { entries, isEmptyObject } from "../util/object";
+import { type ConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings";
 import { type IOutput } from "../util/output";
 import { type RenderingControlClient } from "../util/createRenderingControlClient";
+import { entries, isEmptyObject } from "../util/object";
 
-type ApplySettingsArgs = {
+export type ApplyConfigsArgs = {
   controlClient: ControlClient;
   renderingControlClient: RenderingControlClient;
-  receiverSettings: ReceiverSettings;
+  configs: ConfigsFromReceiverSettings;
   output: IOutput;
 };
 
-export async function applySettings({
+export async function applyConfigs({
   controlClient,
   renderingControlClient,
-  receiverSettings,
+  configs,
   output,
-}: ApplySettingsArgs) {
-  const configs = getConfigsFromReceiverSettings(receiverSettings);
-
+}: ApplyConfigsArgs) {
   for await (const [command, config] of entries(configs)) {
     if (config == null) {
       output.debug(`skipping "${command}"`);
