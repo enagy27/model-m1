@@ -27,6 +27,7 @@ import {
   createRenderControlClient,
   type RenderControlClient,
 } from "../util/createRenderControlClient";
+import type { CreateClientArgs } from "../util/createEndpoint";
 
 const getConfigInputSchema = v.tuple([
   v.object({
@@ -186,9 +187,8 @@ export const getConfig = new Command("get-config")
     const parser = new XMLParser({ ignoreAttributes: false });
     const builder = new XMLBuilder({ ignoreAttributes: false });
 
-    const controlClient = createControlClient({
+    const clientArgs = {
       host: `${hostname}:${port}`,
-      pathname,
       output,
       parse: (data) => parser.parse(data),
       build: (data) => builder.build(data),
@@ -199,21 +199,12 @@ export const getConfig = new Command("get-config")
         connect: (cb) => socket.current.connect(port, hostname, cb),
         destroy: () => socket.renew(),
       },
-    });
+    } satisfies Omit<CreateClientArgs, "pathname">;
 
+    const controlClient = createControlClient({ ...clientArgs, pathname });
     const renderControlClient = createRenderControlClient({
-      host: `${hostname}:${port}`,
+      ...clientArgs,
       pathname: defaultRenderingControlPathname,
-      output,
-      parse: (data) => parser.parse(data),
-      build: (data) => builder.build(data),
-      socket: {
-        write: (data) => socket.current.write(data),
-        on: (eventName, cb) => socket.current.on(eventName, cb),
-        off: (eventName, cb) => socket.current.off(eventName, cb),
-        connect: (cb) => socket.current.connect(port, hostname, cb),
-        destroy: () => socket.renew(),
-      },
     });
 
     try {
