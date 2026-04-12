@@ -58,6 +58,10 @@ function configsFixture(
     TvConfig: TvConfigFixture(),
     transcode: 1,
     VolumeLimit: 100,
+    Balance: 20,
+    Bass: 5,
+    Subwoofer: 15,
+    Treble: 5,
     output: {
       debug: vi.fn(),
       error: vi.fn(),
@@ -80,6 +84,10 @@ function receiverSettingsFixture(
     lowPassFilter: 100,
     multiRoomAudioQuality: "normal",
     nightMode: "off",
+    balance: 0,
+    bass: 0,
+    subwoofer: 0,
+    treble: 0,
     outputMode: "stereo",
     soundMode: "stereo",
     statusLedBrightness: 100,
@@ -279,6 +287,126 @@ describe("getReceiverSettingsFromConfigs", () => {
     const settings = getReceiverSettingsFromConfigs(configs);
 
     expect(settings).toEqual(expect.objectContaining({ nightMode: "off" }));
+  });
+
+  it("balance left", () => {
+    const configs = configsFixture({
+      Balance: 0,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ balance: -20 }));
+  });
+
+  it("balance center", () => {
+    const configs = configsFixture({
+      Balance: 20,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ balance: 0 }));
+  });
+
+  it("balance right", () => {
+    const configs = configsFixture({
+      Balance: 40,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ balance: 20 }));
+  });
+
+  it("bass min", () => {
+    const configs = configsFixture({
+      Bass: 0,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ bass: -5 }));
+  });
+
+  it("bass even", () => {
+    const configs = configsFixture({
+      Bass: 5,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ bass: 0 }));
+  });
+
+  it("bass max", () => {
+    const configs = configsFixture({
+      Bass: 10,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ bass: 5 }));
+  });
+
+  it("subwoofer min", () => {
+    const configs = configsFixture({
+      Subwoofer: 0,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ subwoofer: -15 }));
+  });
+
+  it("subwoofer even", () => {
+    const configs = configsFixture({
+      Subwoofer: 15,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ subwoofer: 0 }));
+  });
+
+  it("subwoofer max", () => {
+    const configs = configsFixture({
+      Subwoofer: 30,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ subwoofer: 15 }));
+  });
+
+  it("treble min", () => {
+    const configs = configsFixture({
+      Treble: 0,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ treble: -5 }));
+  });
+
+  it("treble even", () => {
+    const configs = configsFixture({
+      Treble: 5,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ treble: 0 }));
+  });
+
+  it("treble max", () => {
+    const configs = configsFixture({
+      Treble: 10,
+    });
+
+    const settings = getReceiverSettingsFromConfigs(configs);
+
+    expect(settings).toEqual(expect.objectContaining({ treble: 5 }));
   });
 
   it("nightMode enabled", () => {

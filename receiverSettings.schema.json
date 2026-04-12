@@ -2,18 +2,61 @@
   "_comment": "AUTO-GENERATED: This schema was generated from the receiverSettingsSchema valibot schema in util/receiverSettings.ts. Do not edit manually.",
   "type": "object",
   "properties": {
+    "soundMode": {
+      "enum": [
+        "direct",
+        "stereo",
+        "virtual"
+      ],
+      "type": "string"
+    },
+    "dialogEnhancement": {
+      "enum": [
+        "off",
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    },
+    "nightMode": {
+      "enum": [
+        "off",
+        "on"
+      ],
+      "type": "string"
+    },
+    "bass": {
+      "type": "number",
+      "minimum": -5,
+      "maximum": 5
+    },
+    "treble": {
+      "type": "number",
+      "minimum": -5,
+      "maximum": 5
+    },
+    "balance": {
+      "type": "number",
+      "minimum": -20,
+      "maximum": 20
+    },
+    "subwoofer": {
+      "type": "number",
+      "minimum": -15,
+      "maximum": 15
+    },
     "multiRoomAudioQuality": {
-      "enum": [],
+      "enum": [
+        "normal",
+        "high"
+      ],
       "type": "string"
     },
     "statusLedBrightness": {
       "type": "number",
       "minimum": 0,
       "maximum": 100
-    },
-    "energyMode": {
-      "enum": [],
-      "type": "string"
     },
     "volumeLimit": {
       "type": "number",
@@ -27,11 +70,6 @@
         "onWithSound"
       ],
       "type": "string"
-    },
-    "subwooferLevel": {
-      "type": "number",
-      "minimum": -15,
-      "maximum": 15
     },
     "lowPassFilter": {
       "enum": [
@@ -52,7 +90,14 @@
       ],
       "type": "string"
     },
-    "balance": {},
+    "diracLiveFilter": {
+      "enum": [
+        "filter1",
+        "filter2",
+        "filter3"
+      ],
+      "type": "string"
+    },
     "outputMode": {
       "enum": [
         "stereo"
@@ -61,16 +106,25 @@
     },
     "highPassFilter": {
       "enum": [
+        "off",
         40,
         80,
         100,
         110,
         120
       ],
-      "type": "number"
+      "type": [
+        "string",
+        "number"
+      ]
     },
     "tvInput": {
-      "enum": [],
+      "enum": [
+        "auto",
+        "hdmi",
+        "optical",
+        "none"
+      ],
       "type": "string"
     },
     "tvAutoplay": {

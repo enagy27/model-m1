@@ -4,7 +4,7 @@
   "UNSUPPORTED_energyMode": "autoSleep",
   "volumeLimit": 95,
   "_touchControls": "on",
-  "_subwooferLevel": 0,
+  "_subwoofer": 0,
   "_lowPassFilter": 120,
   "_digitalFilter": "filter1",
   "_balance": 0,

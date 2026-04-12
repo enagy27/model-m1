@@ -20,6 +20,23 @@ export const receiverSettingsSchema = v.partial(
      */
     nightMode: v.picklist(["off", "on"]),
     /**
+     * Bass equalization level.
+     */
+    bass: v.pipe(v.number(), v.minValue(-5), v.maxValue(5)),
+    /**
+     * Treble equalization level.
+     */
+    treble: v.pipe(v.number(), v.minValue(-5), v.maxValue(5)),
+    /**
+     * Biases towards the left speaker (negative values) or towards the right speaker
+     * (positive values).
+     */
+    balance: v.pipe(v.number(), v.minValue(-20), v.maxValue(20)),
+    /**
+     * Subwoofer equalization level.
+     */
+    subwoofer: v.pipe(v.number(), v.minValue(-15), v.maxValue(15)),
+    /**
      * Choose how to distribute high-bitrate audio sources such as WAV or PCM
      * (including audio from external inputs) when playing in multi-room groups.
      *
@@ -56,11 +73,6 @@ export const receiverSettingsSchema = v.partial(
      * sounds as feedback.
      */
     touchControls: v.picklist(["off", "on", "onWithSound"]),
-    // /**
-    //  * Subwoofer equalization level.
-    //  */
-    // 0 to 30 on the server
-    // subwooferLevel: v.pipe(v.number(), v.minValue(-15), v.maxValue(15)),
     /**
      * Filter below which the subwoofer will be active.
      */
@@ -73,19 +85,6 @@ export const receiverSettingsSchema = v.partial(
      * Apply different dirac live filters.
      */
     diracLiveFilter: v.picklist(["filter1", "filter2", "filter3"]),
-    // /**
-    //  * Bass equalization level.
-    //  */
-    // bass: v.pipe(v.number(), v.minValue(0), v.maxValue(10)),
-    // /**
-    //  * Treble equalization level.
-    //  */
-    // treble: v.pipe(v.number(), v.minValue(0), v.maxValue(10)),
-    // /**
-    //  * Biases towards the left speaker (negative values) or towards the right speaker
-    //  * (positive values).
-    //  */
-    // balance: v.pipe(v.number(), v.minValue(-20), v.maxValue(20)), // 0 to 40 on the server
     /**
      * Determines whether audio will be split into two channels or duplicated by each
      * speaker.
