@@ -38,6 +38,10 @@ export type GetReceiverSettingsFromConfigsArgs = {
   >;
   transcode: 0 | 1;
   VolumeLimit: number;
+  Bass: number;
+  Treble: number;
+  Balance: number;
+  Subwoofer: number;
   output: IOutput;
 };
 
@@ -194,6 +198,10 @@ export function getReceiverSettingsFromConfigs({
   TvConfig,
   transcode,
   VolumeLimit,
+  Bass,
+  Treble,
+  Balance,
+  Subwoofer,
   output,
 }: GetReceiverSettingsFromConfigsArgs): ReceiverSettingsResponse {
   const soundMode = getSoundMode(AudioConfig.soundMode);
@@ -216,16 +224,18 @@ export function getReceiverSettingsFromConfigs({
     soundMode,
     dialogEnhancement,
     nightMode,
+    bass: Bass - 5,
+    treble: Treble - 5,
+    balance: Balance - 20,
+    subwoofer: Subwoofer - 15,
     multiRoomAudioQuality: transcode ? "normal" : "high",
     statusLedBrightness: networkLED?.brightness,
     // energyMode? may not be working in the app? May be another port?
     volumeLimit: VolumeLimit,
     touchControls: touchLED ? getTouchControls(touchLED) : undefined,
-    // subwooferLevel? cannot get this value
     lowPassFilter: AudioConfig.lowpass,
     digitalFilter: getDigitalFilter(AudioConfig.digitalFilter),
     diracLiveFilter: getDiracLiveFilter(AudioConfig.diracActiveFilter),
-    // balance? cannot get this value
     outputMode: getOutputMode(AudioConfig.outputMode),
     highPassFilter: AudioConfig.highpass || "off",
     tvInput: getTvInput(TvConfig.input),

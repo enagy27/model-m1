@@ -1,4 +1,3 @@
-import { XMLParser } from "fast-xml-parser";
 import * as v from "valibot";
 
 import type { IOutput } from "./output";
@@ -49,10 +48,6 @@ function createBody({ action, data, build, service }: BodyArgs): string {
   return `${build(body)}\r\n`;
 }
 
-type RequestArgs<Requests extends Record<string, Record<string, unknown>>> = {
-  [K in keyof Requests]: Requests[K] extends never ? [K] : [K, Requests[K]];
-};
-
 export type CreateClientArgs = {
   readonly socket: ISocket;
   readonly host: string;
@@ -63,7 +58,7 @@ export type CreateClientArgs = {
 };
 
 export function createEndpoint<
-  Requests extends Record<string, Record<string, unknown>>,
+  Requests extends Record<string, Record<string, unknown> | never>,
   Responses extends Record<keyof Requests, (body: unknown) => unknown>,
 >(args: { responses: Responses; service: string }) {
   const { service, responses } = args;
@@ -77,7 +72,7 @@ export function createEndpoint<
     build,
   }: CreateClientArgs) {
     return async function controlRequest<K extends string & keyof Requests>(
-      ...args: RequestArgs<Requests>[K]
+      ...args: Requests[K] extends never ? [K] : [K, Requests[K]]
     ): Promise<ReturnType<Responses[K]>> {
       const [action, data = {}] = args;
 

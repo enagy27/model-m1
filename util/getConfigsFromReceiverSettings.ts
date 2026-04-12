@@ -212,6 +212,10 @@ export type ConfigsFromReceiverSettings = {
   TvConfig: Partial<TvConfig> | undefined;
   transcode: 1 | 0 | undefined;
   VolumeLimit: number | undefined;
+  Balance: number | undefined;
+  Bass: number | undefined;
+  Subwoofer: number | undefined;
+  Treble: number | undefined;
 };
 
 /**
@@ -222,6 +226,10 @@ export function getConfigsFromReceiverSettings({
   soundMode,
   dialogEnhancement,
   nightMode,
+  balance,
+  bass,
+  subwoofer,
+  treble,
   multiRoomAudioQuality,
   statusLedBrightness,
   touchControls,
@@ -272,5 +280,10 @@ export function getConfigsFromReceiverSettings({
         : undefined,
 
     VolumeLimit,
+
+    Balance: balance != null ? balance + 20 : undefined,
+    Bass: bass != null ? bass + 5 : undefined,
+    Subwoofer: subwoofer != null ? subwoofer + 15 : undefined,
+    Treble: treble != null ? treble + 5 : undefined,
   };
 }

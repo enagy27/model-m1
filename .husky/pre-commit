@@ -1,0 +1,2 @@
+npm run generate:schema
+git add receiverSettings.schema.json

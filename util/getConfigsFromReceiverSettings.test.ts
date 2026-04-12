@@ -95,6 +95,126 @@ describe("getConfigsFromReceiverSettings", () => {
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
+  it("balance left", () => {
+    const configs = getConfigsFromReceiverSettings({
+      balance: -20,
+    });
+
+    expect(configs).toEqual({
+      Balance: 0,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("balance center", () => {
+    const configs = getConfigsFromReceiverSettings({
+      balance: 0,
+    });
+
+    expect(configs).toEqual({
+      Balance: 20,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("balance right", () => {
+    const configs = getConfigsFromReceiverSettings({
+      balance: 20,
+    });
+
+    expect(configs).toEqual({
+      Balance: 40,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("bass min", () => {
+    const configs = getConfigsFromReceiverSettings({
+      bass: -5,
+    });
+
+    expect(configs).toEqual({
+      Bass: 0,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("bass even", () => {
+    const configs = getConfigsFromReceiverSettings({
+      bass: 0,
+    });
+
+    expect(configs).toEqual({
+      Bass: 5,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("bass max", () => {
+    const configs = getConfigsFromReceiverSettings({
+      bass: 5,
+    });
+
+    expect(configs).toEqual({
+      Bass: 10,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("subwoofer min", () => {
+    const configs = getConfigsFromReceiverSettings({
+      subwoofer: -15,
+    });
+
+    expect(configs).toEqual({
+      Subwoofer: 0,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("subwoofer even", () => {
+    const configs = getConfigsFromReceiverSettings({
+      subwoofer: 0,
+    });
+
+    expect(configs).toEqual({
+      Subwoofer: 15,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("subwoofer max", () => {
+    const configs = getConfigsFromReceiverSettings({
+      subwoofer: 15,
+    });
+
+    expect(configs).toEqual({
+      Subwoofer: 30,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("treble min", () => {
+    const configs = getConfigsFromReceiverSettings({
+      treble: -5,
+    });
+
+    expect(configs).toEqual({
+      Treble: 0,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("treble even", () => {
+    const configs = getConfigsFromReceiverSettings({
+      treble: 0,
+    });
+
+    expect(configs).toEqual({
+      Treble: 5,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
+  it("treble max", () => {
+    const configs = getConfigsFromReceiverSettings({
+      treble: 5,
+    });
+
+    expect(configs).toEqual({
+      Treble: 10,
+    } satisfies Partial<ConfigsFromReceiverSettings>);
+  });
+
   it("multiRoomAudioQuality normal", () => {
     const configs = getConfigsFromReceiverSettings({
       multiRoomAudioQuality: "normal",
