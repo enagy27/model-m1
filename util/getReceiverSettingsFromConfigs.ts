@@ -142,6 +142,7 @@ function getDiracLiveFilter(
   diracActiveFilter: AudioConfig["diracActiveFilter"],
 ): ReceiverSettings["diracLiveFilter"] {
   switch (diracActiveFilter) {
+    case "off":
     case "filter1":
     case "filter2":
     case "filter3": {
@@ -230,7 +231,7 @@ export function getReceiverSettingsFromConfigs({
     subwoofer: Subwoofer - 15,
     multiRoomAudioQuality: transcode ? "normal" : "high",
     statusLedBrightness: networkLED?.brightness,
-    // energyMode? may not be working in the app? May be another port?
+    // energyMode? may not be working in the app?
     volumeLimit: VolumeLimit,
     touchControls: touchLED ? getTouchControls(touchLED) : undefined,
     lowPassFilter: AudioConfig.lowpass,
