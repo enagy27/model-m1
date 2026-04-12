@@ -9,10 +9,10 @@ import {
   type ControlClient,
 } from "../util/createControlClient";
 import {
-  defaultAiosControlPort,
-  defaultAiosControlPathname,
+  defaultActControlPort,
+  defaultActControlUrl,
   inputPiped,
-  defaultRenderingControlPathname,
+  defaultRenderingControlUrl,
 } from "../env";
 import { read as readStream } from "../util/streams";
 import { getOutput } from "../util/output";
@@ -24,16 +24,17 @@ import {
   type GetReceiverSettingsFromConfigsArgs,
 } from "../util/getReceiverSettingsFromConfigs";
 import {
-  createRenderControlClient,
-  type RenderControlClient,
-} from "../util/createRenderControlClient";
+  createRenderingControlClient,
+  type RenderingControlClient,
+} from "../util/createRenderingControlClient";
 import type { CreateClientArgs } from "../util/createEndpoint";
 
 const getConfigInputSchema = v.tuple([
   v.object({
     hostname: v.optional(v.pipe(v.string(), v.ipv4())),
-    port: v.optional(v.number(), defaultAiosControlPort),
-    pathname: v.optional(v.string(), defaultAiosControlPathname),
+    port: v.optional(v.number(), defaultActControlPort),
+    actControlUrl: v.optional(v.string(), defaultActControlUrl),
+    renderingControlUrl: v.optional(v.string(), defaultRenderingControlUrl),
     logLevel: v.picklist(options.logLevels),
   }),
 ]);
@@ -45,7 +46,7 @@ const getConfigSchema = v.pipe(
 
 const pipedInputSchema = discover.pipedOutputSchema;
 
-const renderControlArgs = {
+const renderingControlArgs = {
   InstanceID: 0,
   Channel: "Master",
 } as const;
@@ -104,34 +105,36 @@ async function getControlConfigs({
   };
 }
 
-type GetRenderControlConfigsArgs = { renderControlClient: RenderControlClient };
+type GetRenderingControlConfigsArgs = {
+  renderingControlClient: RenderingControlClient;
+};
 
-type RenderControlConfigs = Pick<
+type RenderingControlConfigs = Pick<
   GetReceiverSettingsFromConfigsArgs,
   "Subwoofer" | "Treble" | "Balance" | "Bass"
 >;
 
-async function getRenderControlConfigs({
-  renderControlClient,
-}: GetRenderControlConfigsArgs): Promise<RenderControlConfigs> {
-  const subwooferEnvelope = await renderControlClient(
+async function getRenderingControlConfigs({
+  renderingControlClient,
+}: GetRenderingControlConfigsArgs): Promise<RenderingControlConfigs> {
+  const subwooferEnvelope = await renderingControlClient(
     "X_GetSubwoofer",
-    renderControlArgs,
+    renderingControlArgs,
   );
 
-  const trebleEnvelope = await renderControlClient(
+  const trebleEnvelope = await renderingControlClient(
     "X_GetTreble",
-    renderControlArgs,
+    renderingControlArgs,
   );
 
-  const balanceEnvelope = await renderControlClient(
+  const balanceEnvelope = await renderingControlClient(
     "X_GetBalance",
-    renderControlArgs,
+    renderingControlArgs,
   );
 
-  const bassEnvelope = await renderControlClient(
+  const bassEnvelope = await renderingControlClient(
     "X_GetBass",
-    renderControlArgs,
+    renderingControlArgs,
   );
 
   const subwooferResponse =
@@ -155,7 +158,8 @@ export const getConfig = new Command("get-config")
   .description("Reads the current state of the config.")
   .addOption(options.hostname)
   .addOption(options.port)
-  .addOption(options.pathname)
+  .addOption(options.actControlUrl)
+  .addOption(options.renderingControlUrl)
   .addOption(options.logLevel)
   .action(async (...args: unknown[]) => {
     const stdinData = inputPiped ? await readStream(process.stdin) : undefined;
@@ -167,8 +171,10 @@ export const getConfig = new Command("get-config")
     const {
       logLevel,
       hostname = pipedInputs.hostname,
-      port = pipedInputs.port ?? defaultAiosControlPort,
-      pathname = pipedInputs.pathname ?? defaultAiosControlPathname,
+      port = pipedInputs.port ?? defaultActControlPort,
+      actControlUrl = pipedInputs.actControlUrl ?? defaultActControlUrl,
+      renderingControlUrl = pipedInputs.renderingControlUrl ??
+        defaultRenderingControlUrl,
     } = v.parse(getConfigSchema, args);
 
     if (hostname == null) {
@@ -201,21 +207,25 @@ export const getConfig = new Command("get-config")
       },
     } satisfies Omit<CreateClientArgs, "pathname">;
 
-    const controlClient = createControlClient({ ...clientArgs, pathname });
-    const renderControlClient = createRenderControlClient({
+    const controlClient = createControlClient({
       ...clientArgs,
-      pathname: defaultRenderingControlPathname,
+      pathname: actControlUrl,
+    });
+
+    const renderingControlClient = createRenderingControlClient({
+      ...clientArgs,
+      pathname: renderingControlUrl,
     });
 
     try {
       const controlConfigs = await getControlConfigs({ controlClient });
-      const renderControlConfigs = await getRenderControlConfigs({
-        renderControlClient,
+      const renderingControlConfigs = await getRenderingControlConfigs({
+        renderingControlClient,
       });
 
       const config = getReceiverSettingsFromConfigs({
         ...controlConfigs,
-        ...renderControlConfigs,
+        ...renderingControlConfigs,
         output,
       });
 

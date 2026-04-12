@@ -29,19 +29,19 @@ export const heosPort = v.parse(
   process.env.HEOS_PORT,
 );
 
-export const defaultAiosControlPort = v.parse(
+export const defaultActControlPort = v.parse(
   v.optional(numberAsString, `${60006}`),
-  process.env.DEFAULT_AIOS_CONTROL_PORT,
+  process.env.DEFAULT_ACT_CONTROL_PORT,
 );
 
-export const defaultAiosControlPathname = v.parse(
+export const defaultActControlUrl = v.parse(
   v.optional(v.string(), "/ACT/control"),
-  process.env.DEFAULT_AIOS_CONTROL_PATHNAME,
+  process.env.DEFAULT_ACT_CONTROL_URL,
 );
 
-export const defaultRenderingControlPathname = v.parse(
+export const defaultRenderingControlUrl = v.parse(
   v.optional(v.string(), "/upnp/control/renderer_dvc/RenderingControl"),
-  process.env.DEFAULT_RENDERING_CONTROL_PATHNAME,
+  process.env.DEFAULT_RENDERING_CONTROL_URL,
 );
 
 export const outputPiped = v.parse(v.boolean(), !process.stdout.isTTY);
