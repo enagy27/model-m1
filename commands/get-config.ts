@@ -28,6 +28,7 @@ import {
   type RenderingControlClient,
 } from "../util/createRenderingControlClient";
 import type { CreateClientArgs } from "../util/createEndpoint";
+import { receiverSettingsSchema } from "../util/receiverSettings";
 
 const getConfigInputSchema = v.tuple([
   v.object({
@@ -45,6 +46,50 @@ const getConfigSchema = v.pipe(
 );
 
 const pipedInputSchema = discover.pipedOutputSchema;
+
+type PipedInputs = v.InferOutput<typeof pipedInputSchema>;
+
+export const pipedOutputSchema = v.pipe(
+  v.optional(v.string()),
+  v.transform((stdin) => {
+    if (stdin == null) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(stdin);
+    } catch {
+      return undefined;
+    }
+  }),
+  v.optional(receiverSettingsSchema),
+  v.transform((data = {}) => data),
+);
+
+async function getPipedInputs(stream: NodeJS.ReadStream): Promise<PipedInputs> {
+  const stdinData = await readStream(stream);
+
+  return v.parse(pipedInputSchema, stdinData);
+}
+
+async function getInputData(args: unknown[]) {
+  // Command line arguments
+  const options = v.parse(getConfigSchema, args);
+
+  const { logLevel } = options;
+  const output = getOutput({ logLevel });
+
+  // Piped in data stream
+  let pipedInputs: PipedInputs;
+  try {
+    pipedInputs = inputPiped ? await getPipedInputs(process.stdin) : {};
+  } catch (error) {
+    output.debug(`Failed to read input stream: ${error}`);
+    pipedInputs = {};
+  }
+
+  return { ...pipedInputs, ...options };
+}
 
 const renderingControlArgs = {
   InstanceID: 0,
@@ -162,28 +207,23 @@ export const getConfig = new Command("get-config")
   .addOption(options.renderingControlUrl)
   .addOption(options.logLevel)
   .action(async (...args: unknown[]) => {
-    const stdinData = inputPiped ? await readStream(process.stdin) : undefined;
-    const parsedPipedInputs = v.safeParse(pipedInputSchema, stdinData);
-    const pipedInputs = parsedPipedInputs.success
-      ? parsedPipedInputs.output
-      : {};
-
+    const inputs = await getInputData(args);
     const {
       logLevel,
-      hostname = pipedInputs.hostname,
-      port = pipedInputs.port ?? defaultActControlPort,
-      actControlUrl = pipedInputs.actControlUrl ?? defaultActControlUrl,
-      renderingControlUrl = pipedInputs.renderingControlUrl ??
-        defaultRenderingControlUrl,
-    } = v.parse(getConfigSchema, args);
+      hostname,
+      port = defaultActControlPort,
+      actControlUrl = defaultActControlUrl,
+      renderingControlUrl = defaultRenderingControlUrl,
+    } = inputs;
+
+    const output = getOutput({ logLevel });
+    output.debug(`get-config input: ${JSON.stringify(inputs, null, 2)}`);
 
     if (hostname == null) {
       throw new InvalidOptionArgumentError(
         `"hostname" is required. It can be retrieved using the "discover" command and can be piped to the "get-config" command directly as "discover | get-config"`,
       );
     }
-
-    const output = getOutput({ logLevel });
 
     const socket = new Renewable({
       create: () => new net.Socket(),
