@@ -167,6 +167,7 @@ export const discover = new Command()
     "Uses universal plug-n-play to discover the Model M1 on the network. Returns an IP address which can be used to control the amplifier.",
   )
   .option("--friendlyName <NAME>", "The in-app name of the amplifier")
+  .option("--modelName <NAME>", "Amplifier model (e.g. Model M1)")
   .option("--timeout <VALUE>", "Discovery timeout in seconds", Number, 5)
   .addOption(options.logLevel)
   .action(async (...args: unknown[]) => {
