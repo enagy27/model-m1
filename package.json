@@ -14,12 +14,17 @@
   "author": "enagy27",
   "type": "module",
   "bin": {
-    "model-m1": "cli.ts"
+    "model-m1": "dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "tsc",
     "generate:schema": "npx tsx scripts/generateSchema.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
     "prepare": "husky"
   },
   "dependencies": {
