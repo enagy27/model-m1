@@ -15,9 +15,9 @@ This is intended to be a 1:1 swap for the HEOS app settings menu, complete with 
 
 Use it to create presets for gaming, home theatre, and music streaming! Or use the SDK to build your own tooling for home automation.
 
-<!-- Not yet published
-
 ## Installation
+
+Install using npm:
 
 ```bash
 npm install -g model-m1
@@ -26,10 +26,8 @@ npm install -g model-m1
 Or run directly with npx:
 
 ```bash
-npx model-m1 <command>
+npx model-m1
 ```
-
---->
 
 ## Usage
 
