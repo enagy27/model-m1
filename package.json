@@ -1,7 +1,12 @@
 {
   "name": "model-m1",
   "version": "1.0.0",
-  "description": "",
+  "description": "CLI tool and SDK for adjusting settings on the Marantz Model M1",
+  "keywords": [
+    "marantz",
+    "heos",
+    "model-m1"
+  ],
   "homepage": "https://github.com/enagy27/model-m1#readme",
   "bugs": {
     "url": "https://github.com/enagy27/model-m1/issues"
