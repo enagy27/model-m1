@@ -68,7 +68,7 @@ describe("control", () => {
         `ACCEPT-RANGES: bytes`,
         `CONTENT-TYPE: text/xml; charset=\"utf-8\"`,
         `SOAPACTION: "urn:schemas-denon-com:service:ACT:1#GetAudioConfig"`,
-        `USER-AGENT: marantz-model-m1-remote/1.0.0`,
+        `USER-AGENT: model-m1/1.0.0`,
         ``,
         getAudioConfigRequestBody,
       ].join("\r\n"),

@@ -1,14 +1,14 @@
 {
-  "name": "marantz-model-m1-remote",
+  "name": "model-m1",
   "version": "1.0.0",
   "description": "",
-  "homepage": "https://github.com/enagy27/marantz-model-m1-remote#readme",
+  "homepage": "https://github.com/enagy27/model-m1#readme",
   "bugs": {
-    "url": "https://github.com/enagy27/marantz-model-m1-remote/issues"
+    "url": "https://github.com/enagy27/model-m1/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/enagy27/marantz-model-m1-remote.git"
+    "url": "git+https://github.com/enagy27/model-m1.git"
   },
   "license": "ISC",
   "author": "enagy27",
