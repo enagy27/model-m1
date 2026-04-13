@@ -10,10 +10,12 @@
     "type": "git",
     "url": "git+https://github.com/enagy27/model-m1.git"
   },
-  "license": "ISC",
+  "license": "GPL-3.0-only",
   "author": "enagy27",
   "type": "module",
-  "module": "index.ts",
+  "bin": {
+    "model-m1": "cli.ts"
+  },
   "scripts": {
     "generate:schema": "npx tsx scripts/generateSchema.ts",
     "test": "vitest run",
