@@ -3,6 +3,7 @@ import * as v from "valibot";
 import type { IOutput } from "./output";
 import * as sockets from "./sockets";
 import type { ISocket } from "./sockets";
+import packageJson from "../package.json" with { type: "json" };
 
 const primitiveSchema = v.union([
   v.bigint(),
@@ -89,7 +90,7 @@ export function createEndpoint<
         "ACCEPT-RANGES": "bytes",
         "CONTENT-TYPE": `text/xml; charset="utf-8"`,
         SOAPACTION: `"${service}#${action}"`,
-        "USER-AGENT": `marantz-model-m1-remote/1.0.0`,
+        "USER-AGENT": `${packageJson.name}/${packageJson.version}`,
       };
 
       const response = await sockets.request({
