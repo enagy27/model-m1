@@ -1,5 +1,4 @@
 import * as v from "valibot";
-import { Option } from "commander";
 
 const stringEnumSchema = v.object({
   type: v.literal("string"),

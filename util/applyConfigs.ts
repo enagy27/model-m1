@@ -1,8 +1,8 @@
-import { type ControlClient } from "../util/createControlClient";
-import { type ConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings";
-import { type IOutput } from "../util/output";
-import { type RenderingControlClient } from "../util/createRenderingControlClient";
-import { entries, isEmptyObject } from "../util/object";
+import { type ControlClient } from "../util/createControlClient.js";
+import { type ConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings.js";
+import { type IOutput } from "../util/output.js";
+import { type RenderingControlClient } from "../util/createRenderingControlClient.js";
+import { entries, isEmptyObject } from "../util/object.js";
 
 export type ApplyConfigsArgs = {
   controlClient: ControlClient;

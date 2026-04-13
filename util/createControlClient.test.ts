@@ -3,10 +3,10 @@ import { EventEmitter } from "node:events";
 import { XMLParser } from "fast-xml-parser";
 import XMLBuilder from "fast-xml-builder";
 
-import { createControlClient } from "./createControlClient";
-import type { IOutput } from "./output";
-import type { ISocket } from "./sockets";
-import type { CreateClientArgs } from "./createEndpoint";
+import { createControlClient } from "./createControlClient.js";
+import type { IOutput } from "./output.js";
+import type { ISocket } from "./sockets.js";
+import type { CreateClientArgs } from "./createEndpoint.js";
 
 const parser = new XMLParser({ ignoreAttributes: false });
 const builder = new XMLBuilder({ ignoreAttributes: false });

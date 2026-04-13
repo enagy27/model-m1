@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { getAiosDevice } from "./getAiosDevice";
+import { getAiosDevice } from "./getAiosDevice.js";
 
 const aiosDeviceXml = readFileSync(
   join(import.meta.dirname, "__fixtures__/aiosDevice.xml"),

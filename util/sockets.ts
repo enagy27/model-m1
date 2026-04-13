@@ -1,7 +1,7 @@
 import * as v from "valibot";
-import { entries, fromEntries } from "./object";
-import type { IOutput } from "./output";
-import { serializeHeaders } from "./tcp";
+import { entries, fromEntries } from "./object.js";
+import type { IOutput } from "./output.js";
+import { serializeHeaders } from "./tcp.js";
 
 export type ISocketResponse = {
   statusCode: number;

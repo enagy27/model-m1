@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { findDevices } from "./findDevices";
-import type { AiosDevice, Device, Service } from "./getAiosDevice";
+import { findDevices } from "./findDevices.js";
+import type { AiosDevice, Device, Service } from "./getAiosDevice.js";
 
 function createMockService(overrides: Partial<Service> = {}): Service {
   return {

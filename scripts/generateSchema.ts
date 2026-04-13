@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { toJsonSchema } from "@valibot/to-json-schema";
 
-import { receiverSettingsSchema } from "../util/receiverSettings";
+import { receiverSettingsSchema } from "../util/receiverSettings.js";
 
 const jsonSchema = toJsonSchema(receiverSettingsSchema);
 

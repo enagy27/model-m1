@@ -2,9 +2,12 @@ import { describe, it, expect, vi } from "vitest";
 import {
   getReceiverSettingsFromConfigs,
   type GetReceiverSettingsFromConfigsArgs,
-} from "./getReceiverSettingsFromConfigs";
-import type { ReceiverSettings } from "./receiverSettings";
-import type { NetworkLEDConfig, TouchLEDConfig } from "./createControlClient";
+} from "./getReceiverSettingsFromConfigs.js";
+import type { ReceiverSettings } from "./receiverSettings.js";
+import type {
+  NetworkLEDConfig,
+  TouchLEDConfig,
+} from "./createControlClient.js";
 
 type PartialAudioConfig = GetReceiverSettingsFromConfigsArgs["AudioConfig"];
 type PartialTvConfig = GetReceiverSettingsFromConfigsArgs["TvConfig"];

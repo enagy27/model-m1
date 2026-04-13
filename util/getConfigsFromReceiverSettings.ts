@@ -1,4 +1,4 @@
-import { type ReceiverSettings } from "./receiverSettings";
+import { type ReceiverSettings } from "./receiverSettings.js";
 import type {
   AudioConfig,
   LEDConfig,
@@ -6,12 +6,12 @@ import type {
   NetworkLEDConfig,
   TouchLEDConfig,
   TvConfig,
-} from "./createControlClient";
+} from "./createControlClient.js";
 import {
   isEmptyObject,
   type NonNullishValues,
   removeNullishValueEntries,
-} from "./object";
+} from "./object.js";
 
 function Binary(value: boolean) {
   return value ? 1 : 0;

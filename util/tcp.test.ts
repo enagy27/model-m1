@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { serializeHeaders } from "./tcp";
+import { serializeHeaders } from "./tcp.js";
 
 describe("serializeHeaders", () => {
   it("should serialize a single header", () => {
@@ -50,7 +50,7 @@ describe("serializeHeaders", () => {
     ] as const;
 
     expect(serializeHeaders(headers)).toBe(
-      'HOST: 192.168.4.55:60006\r\n' +
+      "HOST: 192.168.4.55:60006\r\n" +
         'CONTENT-TYPE: text/xml; charset="utf-8"\r\n' +
         "CONTENT-LENGTH: 456\r\n" +
         'SOAPACTION: "urn:schemas-denon-com:service:ACT:1#GetVolume"',

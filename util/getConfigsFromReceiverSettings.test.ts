@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import {
   getConfigsFromReceiverSettings,
   type ConfigsFromReceiverSettings,
-} from "./getConfigsFromReceiverSettings";
+} from "./getConfigsFromReceiverSettings.js";
 
 describe("getConfigsFromReceiverSettings", () => {
   it("soundMode direct", () => {
