@@ -169,7 +169,7 @@ export const discover = new Command()
   .option("--friendlyName <NAME>", "The in-app name of the amplifier")
   .option("--modelName <NAME>", "Amplifier model (e.g. Model M1)")
   .option("--timeout <VALUE>", "Discovery timeout in seconds", Number, 5)
-  .addOption(options.logLevel)
+  .addOption(options.logLevel())
   .action(async (...args: unknown[]) => {
     const inputs = v.parse(discoverSchema, args);
 

@@ -33,9 +33,9 @@ import { receiverSettingsSchema } from "../util/receiverSettings";
 const getConfigInputSchema = v.tuple([
   v.object({
     hostname: v.optional(v.pipe(v.string(), v.ipv4())),
-    port: v.optional(v.number(), defaultActControlPort),
-    actControlUrl: v.optional(v.string(), defaultActControlUrl),
-    renderingControlUrl: v.optional(v.string(), defaultRenderingControlUrl),
+    port: v.number(),
+    actControlUrl: v.string(),
+    renderingControlUrl: v.string(),
     logLevel: v.picklist(options.logLevels),
   }),
 ]);
@@ -201,11 +201,11 @@ async function getRenderingControlConfigs({
 
 export const getConfig = new Command("get-config")
   .description("Reads the current state of the config.")
-  .addOption(options.hostname)
-  .addOption(options.port)
-  .addOption(options.actControlUrl)
-  .addOption(options.renderingControlUrl)
-  .addOption(options.logLevel)
+  .addOption(options.hostname())
+  .addOption(options.port().default(defaultActControlPort))
+  .addOption(options.actControlUrl().default(defaultActControlUrl))
+  .addOption(options.renderingControlUrl().default(defaultRenderingControlUrl))
+  .addOption(options.logLevel())
   .action(async (...args: unknown[]) => {
     const inputs = await getInputData(args);
     const {

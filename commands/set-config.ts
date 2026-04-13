@@ -44,9 +44,9 @@ const setConfigInputSchema = v.tuple([
   v.object({
     ...receiverSettingsSchema.entries,
     hostname: v.optional(v.pipe(v.string(), v.ipv4())),
-    port: v.optional(v.number(), defaultActControlPort),
-    actControlUrl: v.optional(v.string(), defaultActControlUrl),
-    renderingControlUrl: v.optional(v.string(), defaultRenderingControlUrl),
+    port: v.number(),
+    actControlUrl: v.string(),
+    renderingControlUrl: v.string(),
     logLevel: v.picklist(options.logLevels),
   }),
 ]);
@@ -175,19 +175,21 @@ export const setConfig = withSettingsOptions(
       "Set receiver config either via config file or individually via command line options. Accepts piped config data or discover data as well.",
     )
     .addArgument(new Argument("[file]", "Path to a config file"))
-    .addOption(options.hostname)
-    .addOption(options.port)
-    .addOption(options.actControlUrl)
-    .addOption(options.renderingControlUrl)
-    .addOption(options.logLevel),
+    .addOption(options.hostname())
+    .addOption(options.port().default(defaultActControlPort))
+    .addOption(options.actControlUrl().default(defaultActControlUrl))
+    .addOption(
+      options.renderingControlUrl().default(defaultRenderingControlUrl),
+    )
+    .addOption(options.logLevel()),
 ).action(async (...args: unknown[]) => {
   const inputs = await getInputData(args);
   const {
     logLevel,
     hostname,
-    port = defaultActControlPort,
-    actControlUrl = defaultActControlUrl,
-    renderingControlUrl = defaultRenderingControlUrl,
+    port,
+    actControlUrl,
+    renderingControlUrl,
     ...settingsOptions
   } = inputs;
 
@@ -196,7 +198,7 @@ export const setConfig = withSettingsOptions(
 
   if (hostname == null) {
     throw new InvalidOptionArgumentError(
-      `"hostname" is required. It can be retrieved using the "discover" command and can be piped to the "set-config" command directly as "discover | set-config --sound-mode stereo"`,
+      `"hostname" is required. It can be retrieved using the "discover" command and can be piped to the "set-config" command directly as "discover | set-config preset.json"`,
     );
   }
 
