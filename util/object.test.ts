@@ -4,7 +4,7 @@ import {
   fromEntries,
   removeNullishValueEntries,
   isEmptyObject,
-} from "./object";
+} from "./object.js";
 
 describe("entries", () => {
   it("should return entries with correct key-value pairs", () => {

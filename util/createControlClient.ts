@@ -1,8 +1,8 @@
 import { XMLParser } from "fast-xml-parser";
 import * as v from "valibot";
 
-import { upnpService } from "../env";
-import { createEndpoint } from "./createEndpoint";
+import { upnpService } from "../env.js";
+import { createEndpoint } from "./createEndpoint.js";
 
 export type NetworkLEDConfig = {
   name: "NETWORK";

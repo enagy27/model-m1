@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { XMLParser } from "fast-xml-parser";
-import { ensureArray } from "./array";
+import { ensureArray } from "./array.js";
 
 function xmlArray<
   TInput$1 = unknown,

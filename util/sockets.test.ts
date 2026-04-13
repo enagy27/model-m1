@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { EventEmitter } from "node:events";
 
-import { request } from "./sockets";
-import type { ISocket } from "./sockets";
-import type { IOutput } from "./output";
+import { request } from "./sockets.js";
+import type { ISocket } from "./sockets.js";
+import type { IOutput } from "./output.js";
 
 describe("sockets", () => {
   describe("request", () => {

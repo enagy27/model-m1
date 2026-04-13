@@ -2,9 +2,12 @@
 
 import chalk from "chalk";
 import { Command } from "commander";
-import { name, version } from "./package.json" with { type: "json" };
 
-import * as commands from "./commands";
+import packageJson from "./package.json" with { type: "json" };
+
+const { name, version } = packageJson;
+
+import * as commands from "./commands/index.js";
 
 async function main(args: string[]): Promise<void> {
   const program = new Command()

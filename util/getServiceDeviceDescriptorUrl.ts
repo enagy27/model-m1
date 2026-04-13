@@ -1,6 +1,6 @@
-import { fromEntries } from "./object";
-import type { IOutput } from "./output";
-import { search } from "./upnp";
+import { fromEntries } from "./object.js";
+import type { IOutput } from "./output.js";
+import { search } from "./upnp.js";
 
 export type DeviceData = {
   manufacturer: string;
@@ -67,17 +67,19 @@ export async function getServiceDeviceDescriptorUrl({
 
       // fire once
       socket.off("listening", onListening);
-    };
+    }
 
     function onMessage(this: void, buffer: { toString: () => string }) {
       const message = buffer.toString();
 
       const [, ...headerLines] = message.split("\r\n");
-      const headers = fromEntries(headerLines.map((line): [string, string | undefined] => {
-        const [key, ...valueParts] = line.split(":");
+      const headers = fromEntries(
+        headerLines.map((line): [string, string | undefined] => {
+          const [key, ...valueParts] = line.split(":");
 
-        return [key, valueParts.join(":").trim()] as const;
-      }))
+          return [key, valueParts.join(":").trim()] as const;
+        }),
+      );
 
       const { ST, LOCATION } = headers;
       output.debug(
@@ -91,14 +93,14 @@ export async function getServiceDeviceDescriptorUrl({
       resolve(LOCATION);
 
       cleanup();
-    };
+    }
 
-    function onError(this:void, err: Error) {
+    function onError(this: void, err: Error) {
       output.error(`getServiceDeviceDescriptorUrl: UPNP socket error ${err}`);
       reject(err);
 
       cleanup();
-    };
+    }
 
     socket.on("listening", onListening);
     socket.on("message", onMessage);

@@ -1,12 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
-import { search } from "./upnp";
+import { describe, it, expect } from "vitest";
+import { search } from "./upnp.js";
 
 describe("upnp", () => {
   describe("search", () => {
     it("should send M-SEARCH message with correct format", () => {
       const message = search({
         host: "239.255.255.250:1900",
-        service: "urn:schemas-denon-com:device:AiosDevice:1"
+        service: "urn:schemas-denon-com:device:AiosDevice:1",
       });
 
       expect(message).toEqual(

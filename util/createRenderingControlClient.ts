@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
-import { createEndpoint } from "./createEndpoint";
-import { upnpRenderingControlService } from "../env";
+import { createEndpoint } from "./createEndpoint.js";
+import { upnpRenderingControlService } from "../env.js";
 
 // NOTE: type inference breaks when trying to move these out to a shared type,
 // so we accept the repetition for InstanceID and Channel

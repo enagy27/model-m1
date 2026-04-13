@@ -4,9 +4,9 @@ import type {
   LowLatencyConfig,
   TouchLEDConfig,
   TvConfig,
-} from "./createControlClient";
-import type { IOutput } from "./output";
-import type { ReceiverSettings } from "./receiverSettings";
+} from "./createControlClient.js";
+import type { IOutput } from "./output.js";
+import type { ReceiverSettings } from "./receiverSettings.js";
 
 type ReceiverSettingsResponseOverrides = {
   lowPassFilter?: number;

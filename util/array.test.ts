@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ensureArray } from "./array";
+import { ensureArray } from "./array.js";
 
 describe("ensureArray", () => {
   it("should return an array when given a single item", () => {

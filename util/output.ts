@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import type { LogLevel } from "./options";
+import type { LogLevel } from "./options.js";
 
 export type IOutput = {
   log(this: void, info: string): void;

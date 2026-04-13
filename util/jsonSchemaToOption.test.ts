@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { jsonSchemaToOption } from "./jsonSchemaToOption";
+import { jsonSchemaToOption } from "./jsonSchemaToOption.js";
 
 describe("jsonSchemaToOption", () => {
   it("string enum", () => {
