@@ -5,14 +5,14 @@ import { Command } from "commander";
 
 import packageJson from "./package.json" with { type: "json" };
 
-const { name, version } = packageJson;
+const { name, description, version } = packageJson;
 
 import * as commands from "./commands/index.js";
 
 async function main(args: string[]): Promise<void> {
   const program = new Command()
     .name(name)
-    .description("CLI for the Marantz Model M1")
+    .description(description)
     .version(version);
 
   for (const command of Object.values(commands)) {
