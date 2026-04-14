@@ -1,6 +1,6 @@
 {
   "name": "model-m1",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool and SDK for adjusting settings on the Marantz Model M1",
   "keywords": [
     "marantz",
@@ -46,6 +46,7 @@
     "@types/qs": "^6.14.0",
     "@valibot/to-json-schema": "^1.6.0",
     "husky": "^9.1.7",
+    "ts-morph": "^28.0.0",
     "type-fest": "^5.5.0",
     "typescript": "^6.0.2",
     "vitest": "^4.1.1"

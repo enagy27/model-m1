@@ -6,6 +6,7 @@ describe("jsonSchemaToOption", () => {
     const option = jsonSchemaToOption({
       name: "soundMode",
       schema: {
+        description: "Sets soundMode",
         enum: ["direct", "stereo", "virtual"],
         type: "string",
       },
@@ -22,6 +23,7 @@ describe("jsonSchemaToOption", () => {
     const option = jsonSchemaToOption({
       name: "lowPassFilter",
       schema: {
+        description: "Sets lowPassFilter",
         enum: [40, 60, 80, 90, 100, 110, 120],
         type: "number",
       },
@@ -41,6 +43,7 @@ describe("jsonSchemaToOption", () => {
     const option = jsonSchemaToOption({
       name: "highPassFilter",
       schema: {
+        description: "Sets highPassFilter",
         enum: ["off", 40, 80, 100, 110, 120],
         type: ["string", "number"],
       },
@@ -61,6 +64,7 @@ describe("jsonSchemaToOption", () => {
     const option = jsonSchemaToOption({
       name: "bass",
       schema: {
+        description: "Sets bass",
         type: "number",
         minimum: -5,
         maximum: 5,
@@ -69,7 +73,7 @@ describe("jsonSchemaToOption", () => {
 
     expect(option).toEqual({
       flags: "--bass <VALUE>",
-      description: "Sets bass (-5 to 5)",
+      description: "Sets bass\n\nRange: [-5 to 5]",
       argParser: expect.anything(),
     });
 
@@ -80,6 +84,7 @@ describe("jsonSchemaToOption", () => {
     const option = jsonSchemaToOption({
       name: "bass",
       schema: {
+        description: "Sets bass",
         type: "number",
         minimum: -5,
       },
@@ -87,7 +92,7 @@ describe("jsonSchemaToOption", () => {
 
     expect(option).toEqual({
       flags: "--bass <VALUE>",
-      description: "Sets bass (minimum value: -5)",
+      description: "Sets bass\n\nRange: [down to -5]",
       argParser: expect.anything(),
     });
 
@@ -98,6 +103,7 @@ describe("jsonSchemaToOption", () => {
     const option = jsonSchemaToOption({
       name: "bass",
       schema: {
+        description: "Sets bass",
         type: "number",
         maximum: 5,
       },
@@ -105,7 +111,7 @@ describe("jsonSchemaToOption", () => {
 
     expect(option).toEqual({
       flags: "--bass <VALUE>",
-      description: "Sets bass (maximum value: 5)",
+      description: "Sets bass\n\nRange: [up to 5]",
       argParser: expect.anything(),
     });
 

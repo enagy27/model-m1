@@ -8,7 +8,8 @@
         "stereo",
         "virtual"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Choose how to process sound.\n\nDirect: bypass processing Stereo: downmix to two channel audio (plus subwoofer) Virtual: simulated 5.1 audio"
     },
     "dialogEnhancement": {
       "enum": [
@@ -17,51 +18,60 @@
         "medium",
         "high"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Adjusts how much loud dialog is relative to other sounds"
     },
     "nightMode": {
       "enum": [
         "off",
         "on"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "When enabled, reduces the dynamic range of output audio to achieve a homogeneous loudness level."
     },
     "bass": {
       "type": "number",
       "minimum": -5,
-      "maximum": 5
+      "maximum": 5,
+      "description": "Bass equalization level."
     },
     "treble": {
       "type": "number",
       "minimum": -5,
-      "maximum": 5
+      "maximum": 5,
+      "description": "Treble equalization level."
     },
     "balance": {
       "type": "number",
       "minimum": -20,
-      "maximum": 20
+      "maximum": 20,
+      "description": "Biases towards the left speaker (negative values) or towards the right speaker (positive values)."
     },
     "subwoofer": {
       "type": "number",
       "minimum": -15,
-      "maximum": 15
+      "maximum": 15,
+      "description": "Subwoofer equalization level."
     },
     "multiRoomAudioQuality": {
       "enum": [
         "normal",
         "high"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Choose how to distribute high-bitrate audio sources such as WAV or PCM (including audio from external inputs) when playing in multi-room groups.\n\nNormal: high bitrate audio is compressed in AAC 256 kbps before being distributed to other rooms. This improves reliability and network performance.\n\nHigh: high bitrate audio is sent in PCM 16 bits 44.1 kHz non-compressed to other rooms. Do not use this option unless your devices are connected via ethernet or if all grouped devices are using an excellent wifi signal."
     },
     "statusLedBrightness": {
       "type": "number",
       "minimum": 0,
-      "maximum": 100
+      "maximum": 100,
+      "description": "Adjust the front status LED brightness."
     },
     "volumeLimit": {
       "type": "number",
       "minimum": 0,
-      "maximum": 100
+      "maximum": 100,
+      "description": "Limiting volume can protect speakers if volume levels exceed the power capabilities of your speakers."
     },
     "touchControls": {
       "enum": [
@@ -69,7 +79,8 @@
         "on",
         "onWithSound"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Touch controls on the front of the device. Can be off, on, or on and with sounds as feedback."
     },
     "lowPassFilter": {
       "enum": [
@@ -81,14 +92,16 @@
         110,
         120
       ],
-      "type": "number"
+      "type": "number",
+      "description": "Filter below which the subwoofer will be active."
     },
     "digitalFilter": {
       "enum": [
         "filter1",
         "filter2"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Apply different audio filters for different tonal profiles."
     },
     "diracLiveFilter": {
       "enum": [
@@ -97,13 +110,15 @@
         "filter2",
         "filter3"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Apply different dirac live filters."
     },
     "outputMode": {
       "enum": [
         "stereo"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Determines whether audio will be split into two channels or duplicated by each speaker."
     },
     "highPassFilter": {
       "enum": [
@@ -117,7 +132,8 @@
       "type": [
         "string",
         "number"
-      ]
+      ],
+      "description": "Filter above which the left and right speakers will be active."
     },
     "tvInput": {
       "enum": [
@@ -126,26 +142,30 @@
         "optical",
         "none"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Determines which source to use as audio for the TV."
     },
     "tvAutoplay": {
       "enum": [
         "off",
         "on"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "Determines whether TV audio source will be switched to by default once active."
     },
     "tvRemoteCodes": {
       "enum": [
         "off",
         "on"
       ],
-      "type": "string"
+      "type": "string",
+      "description": "When active, this device responds to the most commonly used IR volume commands from the TV remote without having to learn the IR codes for your particular TV."
     },
     "audioDelay": {
       "type": "number",
       "minimum": 0,
-      "maximum": 500
+      "maximum": 500,
+      "description": "Allows you to associate other \"Powered by HEOS\" devices to the Marantz Model M1 in order to listen to listen to the TV in other rooms.\n\nIn case of an echo, it is possible to reduce the delay between the Marantz Model M1 and the other devices to improve the synchronization and audio playback.\n\nWarning: too short of a delay may cause audio to drop as network performance degrades. If you experience drops, increase the delay."
     }
   },
   "required": [],
