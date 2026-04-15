@@ -1,6 +1,6 @@
 {
   "name": "model-m1",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "CLI tool and SDK for adjusting settings on the Marantz Model M1",
   "keywords": [
     "marantz",

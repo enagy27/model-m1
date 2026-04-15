@@ -31,8 +31,8 @@ function getDigitalFilterValue(
   }
 }
 
-function getDialogEnhancementLevel(
-  level: NonNullable<ReceiverSettings["dialogEnhancement"]>,
+function getDialogueEnhancementLevel(
+  level: NonNullable<ReceiverSettings["dialogueEnhancement"]>,
 ): 0 | 1 | 2 | 3 {
   switch (level) {
     case "off": {
@@ -163,7 +163,7 @@ function getLowLatencyConfig({
 type TvConfigReceiverSettings = Pick<
   ReceiverSettings,
   | "audioDelay"
-  | "dialogEnhancement"
+  | "dialogueEnhancement"
   | "nightMode"
   | "tvAutoplay"
   | "tvInput"
@@ -171,7 +171,7 @@ type TvConfigReceiverSettings = Pick<
 >;
 
 function getTvConfig({
-  dialogEnhancement,
+  dialogueEnhancement,
   nightMode,
   tvAutoplay,
   tvInput,
@@ -180,12 +180,12 @@ function getTvConfig({
   return {
     autoPlay: tvAutoplay != null ? Binary(tvAutoplay === "on") : undefined,
     dialogueEnhance:
-      dialogEnhancement != null
+      dialogueEnhancement != null
         ? {
             // TODO: this is not part of the iPhone request and may indicate
             // whether this feature is enabled. Consider removing
-            enabled: dialogEnhancement !== "off" ? 1 : 0,
-            level: getDialogEnhancementLevel(dialogEnhancement),
+            enabled: dialogueEnhancement !== "off" ? 1 : 0,
+            level: getDialogueEnhancementLevel(dialogueEnhancement),
           }
         : undefined,
     nightMode:
@@ -228,7 +228,7 @@ export type ConfigsFromReceiverSettings = {
  */
 export function getConfigsFromReceiverSettings({
   soundMode,
-  dialogEnhancement,
+  dialogueEnhancement,
   nightMode,
   balance,
   bass,
@@ -270,7 +270,7 @@ export function getConfigsFromReceiverSettings({
 
     TvConfig: minifyConfig(
       getTvConfig({
-        dialogEnhancement,
+        dialogueEnhancement,
         nightMode,
         tvAutoplay,
         tvInput,

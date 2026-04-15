@@ -7,7 +7,7 @@ Command line tooling and SDK for adjusting settings on the Marantz Model M1.
 This is intended to be a 1:1 swap for the HEOS app settings menu, complete with settings for:
 
 - Sound mode (direct, stereo, virtual)
-- Dialog enhancement
+- Dialogue enhancement
 - Night mode
 - EQ adjustments
 - Digital filters
