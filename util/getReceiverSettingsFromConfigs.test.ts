@@ -80,7 +80,7 @@ function receiverSettingsFixture(
 ): ReceiverSettings {
   return {
     audioDelay: 100,
-    dialogEnhancement: "off",
+    dialogueEnhancement: "off",
     digitalFilter: "filter1",
     diracLiveFilter: "filter1",
     highPassFilter: 100,
@@ -122,7 +122,7 @@ describe("getReceiverSettingsFromConfigs", () => {
     expect(settings).toEqual(receiverSettingsFixture({ audioDelay: 325 }));
   });
 
-  it("dialogEnhancement disabled", () => {
+  it("dialogueEnhancement disabled", () => {
     const configs = configsFixture({
       TvConfig: TvConfigFixture({
         dialogueEnhance: { enabled: 0, level: 1 },
@@ -132,11 +132,11 @@ describe("getReceiverSettingsFromConfigs", () => {
     const settings = getReceiverSettingsFromConfigs(configs);
 
     expect(settings).toEqual(
-      receiverSettingsFixture({ dialogEnhancement: "off" }),
+      receiverSettingsFixture({ dialogueEnhancement: "off" }),
     );
   });
 
-  it("dialogEnhancement enabled level 0", () => {
+  it("dialogueEnhancement enabled level 0", () => {
     const configs = configsFixture({
       TvConfig: TvConfigFixture({
         dialogueEnhance: { enabled: 1, level: 0 },
@@ -146,11 +146,11 @@ describe("getReceiverSettingsFromConfigs", () => {
     const settings = getReceiverSettingsFromConfigs(configs);
 
     expect(settings).toEqual(
-      receiverSettingsFixture({ dialogEnhancement: "off" }),
+      receiverSettingsFixture({ dialogueEnhancement: "off" }),
     );
   });
 
-  it("dialogEnhancement low", () => {
+  it("dialogueEnhancement low", () => {
     const configs = configsFixture({
       TvConfig: TvConfigFixture({
         dialogueEnhance: { enabled: 1, level: 1 },
@@ -160,11 +160,11 @@ describe("getReceiverSettingsFromConfigs", () => {
     const settings = getReceiverSettingsFromConfigs(configs);
 
     expect(settings).toEqual(
-      receiverSettingsFixture({ dialogEnhancement: "low" }),
+      receiverSettingsFixture({ dialogueEnhancement: "low" }),
     );
   });
 
-  it("dialogEnhancement medium", () => {
+  it("dialogueEnhancement medium", () => {
     const configs = configsFixture({
       TvConfig: TvConfigFixture({
         dialogueEnhance: { enabled: 1, level: 2 },
@@ -174,11 +174,11 @@ describe("getReceiverSettingsFromConfigs", () => {
     const settings = getReceiverSettingsFromConfigs(configs);
 
     expect(settings).toEqual(
-      receiverSettingsFixture({ dialogEnhancement: "medium" }),
+      receiverSettingsFixture({ dialogueEnhancement: "medium" }),
     );
   });
 
-  it("dialogEnhancement high", () => {
+  it("dialogueEnhancement high", () => {
     const configs = configsFixture({
       TvConfig: TvConfigFixture({
         dialogueEnhance: { enabled: 1, level: 3 },
@@ -188,7 +188,7 @@ describe("getReceiverSettingsFromConfigs", () => {
     const settings = getReceiverSettingsFromConfigs(configs);
 
     expect(settings).toEqual(
-      receiverSettingsFixture({ dialogEnhancement: "high" }),
+      receiverSettingsFixture({ dialogueEnhancement: "high" }),
     );
   });
 

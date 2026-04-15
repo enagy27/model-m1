@@ -11,9 +11,9 @@ export const receiverSettingsSchema = v.partial(
      */
     soundMode: v.picklist(["direct", "stereo", "virtual"]),
     /**
-     * Adjusts how much loud dialog is relative to other sounds
+     * Adjusts how much loud dialogue is relative to other sounds
      */
-    dialogEnhancement: v.picklist(["off", "low", "medium", "high"]),
+    dialogueEnhancement: v.picklist(["off", "low", "medium", "high"]),
     /**
      * When enabled, reduces the dynamic range of output audio to achieve
      * a homogeneous loudness level.

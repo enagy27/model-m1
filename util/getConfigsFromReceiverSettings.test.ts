@@ -35,9 +35,9 @@ describe("getConfigsFromReceiverSettings", () => {
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
-  it("dialogEnhancement off", () => {
+  it("dialogueEnhancement off", () => {
     const configs = getConfigsFromReceiverSettings({
-      dialogEnhancement: "off",
+      dialogueEnhancement: "off",
     });
 
     expect(configs).toEqual({
@@ -45,9 +45,9 @@ describe("getConfigsFromReceiverSettings", () => {
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
-  it("dialogEnhancement low", () => {
+  it("dialogueEnhancement low", () => {
     const configs = getConfigsFromReceiverSettings({
-      dialogEnhancement: "low",
+      dialogueEnhancement: "low",
     });
 
     expect(configs).toEqual({
@@ -55,9 +55,9 @@ describe("getConfigsFromReceiverSettings", () => {
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
-  it("dialogEnhancement medium", () => {
+  it("dialogueEnhancement medium", () => {
     const configs = getConfigsFromReceiverSettings({
-      dialogEnhancement: "medium",
+      dialogueEnhancement: "medium",
     });
 
     expect(configs).toEqual({
@@ -65,9 +65,9 @@ describe("getConfigsFromReceiverSettings", () => {
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
-  it("dialogEnhancement high", () => {
+  it("dialogueEnhancement high", () => {
     const configs = getConfigsFromReceiverSettings({
-      dialogEnhancement: "high",
+      dialogueEnhancement: "high",
     });
 
     expect(configs).toEqual({

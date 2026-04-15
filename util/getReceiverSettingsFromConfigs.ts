@@ -67,10 +67,10 @@ function getSoundMode(
   }
 }
 
-function getDialogEnhancement({
+function getDialogueEnhancement({
   enabled,
   level,
-}: TvConfig["dialogueEnhance"]): ReceiverSettings["dialogEnhancement"] {
+}: TvConfig["dialogueEnhance"]): ReceiverSettings["dialogueEnhancement"] {
   if (!enabled) {
     return "off";
   }
@@ -210,9 +210,9 @@ export function getReceiverSettingsFromConfigs({
     output.debug(`unknown soundMode: ${soundMode}`);
   }
 
-  const dialogEnhancement = getDialogEnhancement(TvConfig.dialogueEnhance);
-  if (dialogEnhancement == null) {
-    output.debug(`unknown dialogEnhance: ${TvConfig.dialogueEnhance}`);
+  const dialogueEnhancement = getDialogueEnhancement(TvConfig.dialogueEnhance);
+  if (dialogueEnhancement == null) {
+    output.debug(`unknown dialogueEnhance: ${TvConfig.dialogueEnhance}`);
   }
 
   const nightMode = getNightMode(TvConfig.nightMode);
@@ -223,7 +223,7 @@ export function getReceiverSettingsFromConfigs({
 
   return {
     soundMode,
-    dialogEnhancement,
+    dialogueEnhancement,
     nightMode,
     bass: Bass - 5,
     treble: Treble - 5,

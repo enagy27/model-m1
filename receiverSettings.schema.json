@@ -11,7 +11,7 @@
       "type": "string",
       "description": "Choose how to process sound.\n\nDirect: bypass processing Stereo: downmix to two channel audio (plus subwoofer) Virtual: simulated 5.1 audio"
     },
-    "dialogEnhancement": {
+    "dialogueEnhancement": {
       "enum": [
         "off",
         "low",
@@ -19,7 +19,7 @@
         "high"
       ],
       "type": "string",
-      "description": "Adjusts how much loud dialog is relative to other sounds"
+      "description": "Adjusts how much loud dialogue is relative to other sounds"
     },
     "nightMode": {
       "enum": [
