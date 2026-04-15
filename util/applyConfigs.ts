@@ -49,14 +49,14 @@ export async function applyConfigs({
 
       case "LowLatencyConfig": {
         await controlClient("SetLowLatencyConfig", {
-          LowLatencyConfig: config,
+          LowLatencyConfig: { LowLatencyConfig: config },
         });
         break;
       }
 
       case "TvConfig": {
         await controlClient("SetTvConfig", {
-          TvConfig: config,
+          TvConfig: { TvConfig: config },
         });
         break;
       }

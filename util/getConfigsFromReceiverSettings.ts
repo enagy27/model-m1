@@ -182,6 +182,8 @@ function getTvConfig({
     dialogueEnhance:
       dialogEnhancement != null
         ? {
+            // TODO: this is not part of the iPhone request and may indicate
+            // whether this feature is enabled. Consider removing
             enabled: dialogEnhancement !== "off" ? 1 : 0,
             level: getDialogEnhancementLevel(dialogEnhancement),
           }
@@ -189,6 +191,8 @@ function getTvConfig({
     nightMode:
       nightMode != null
         ? {
+            // TODO: this is not part of the iPhone request and may indicate
+            // whether this feature is enabled. Consider removing
             enabled: nightMode !== "off" ? 1 : 0,
             level: nightMode !== "off" ? 1 : 0,
           }
