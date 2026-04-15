@@ -226,7 +226,9 @@ type ControlRequests = {
   GetAudioConfig: never;
   SetAudioConfig: { AudioConfig: { AudioConfig: Partial<AudioConfig> } };
   GetLowLatencyConfig: never;
-  SetLowLatencyConfig: { LowLatencyConfig: Partial<LowLatencyConfig> };
+  SetLowLatencyConfig: {
+    LowLatencyConfig: { LowLatencyConfig: Partial<LowLatencyConfig> };
+  };
   GetTranscode: never;
   SetTranscode: { transcode: number };
   GetVolumeLimit: never;
@@ -238,7 +240,7 @@ type ControlRequests = {
 
   // TV Config
   GetTvConfig: never;
-  SetTvConfig: { TvConfig: Partial<TvConfig> };
+  SetTvConfig: { TvConfig: { TvConfig: Partial<TvConfig> } };
 };
 
 const controlResponseSchemas = {
