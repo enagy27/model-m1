@@ -2,7 +2,7 @@ import { writeFileSync } from "node:fs";
 import { Project, SyntaxKind } from "ts-morph";
 import { JsonSchema, toJsonSchema } from "@valibot/to-json-schema";
 
-import { receiverSettingsSchema } from "../util/receiverSettings.js";
+import { receiverSettingsSchema } from "#util/receiverSettings.js";
 
 function removeJSDocOpening(line: string): string {
   return line
