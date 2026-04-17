@@ -18,6 +18,9 @@
   "license": "GPL-3.0-only",
   "author": "enagy27",
   "type": "module",
+  "imports": {
+    "#*": "./*"
+  },
   "bin": {
     "model-m1": "dist/cli.js"
   },

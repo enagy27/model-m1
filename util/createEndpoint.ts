@@ -3,7 +3,7 @@ import * as v from "valibot";
 import type { IOutput } from "./output.js";
 import * as sockets from "./sockets.js";
 import type { ISocket } from "./sockets.js";
-import packageJson from "../package.json" with { type: "json" };
+import packageJson from "#package.json" with { type: "json" };
 
 const primitiveSchema = v.union([
   v.bigint(),

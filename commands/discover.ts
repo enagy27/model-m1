@@ -2,20 +2,20 @@ import dgram from "dgram";
 import * as v from "valibot";
 import { Command } from "commander";
 
-import { getServiceDeviceDescriptorUrl } from "../util/getServiceDeviceDescriptorUrl.js";
-import { type AiosDevice, getAiosDevice } from "../util/getAiosDevice.js";
-import { findDevices } from "../util/findDevices.js";
+import { getServiceDeviceDescriptorUrl } from "#util/getServiceDeviceDescriptorUrl.js";
+import { type AiosDevice, getAiosDevice } from "#util/getAiosDevice.js";
+import { findDevices } from "#util/findDevices.js";
 import {
   upnpService,
   upnpAddress,
   upnpPort,
   outputPiped,
   upnpRenderingControlService,
-} from "../env.js";
-import { getOutput, type IOutput } from "../util/output.js";
-import { awaitAtMost } from "../util/async.js";
-import * as options from "../util/options.js";
-import { fromEntries } from "../util/object.js";
+} from "#env.js";
+import { getOutput, type IOutput } from "#util/output.js";
+import { awaitAtMost } from "#util/async.js";
+import * as options from "#util/options.js";
+import { fromEntries } from "#util/object.js";
 
 type DiscoverArgs = {
   friendlyName?: string;

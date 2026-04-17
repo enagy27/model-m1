@@ -7,28 +7,28 @@ import XMLBuilder from "fast-xml-builder";
 import {
   createControlClient,
   type ControlClient,
-} from "../util/createControlClient.js";
+} from "#util/createControlClient.js";
 import {
   defaultActControlPort,
   defaultActControlUrl,
   inputPiped,
   defaultRenderingControlUrl,
-} from "../env.js";
-import { read as readStream } from "../util/streams.js";
-import { getOutput } from "../util/output.js";
+} from "#env.js";
+import { read as readStream } from "#util/streams.js";
+import { getOutput } from "#util/output.js";
 import * as discover from "./discover.js";
-import * as options from "../util/options.js";
-import { Renewable } from "../util/Renewable.js";
+import * as options from "#util/options.js";
+import { Renewable } from "#util/Renewable.js";
 import {
   getReceiverSettingsFromConfigs,
   type GetReceiverSettingsFromConfigsArgs,
-} from "../util/getReceiverSettingsFromConfigs.js";
+} from "#util/getReceiverSettingsFromConfigs.js";
 import {
   createRenderingControlClient,
   type RenderingControlClient,
-} from "../util/createRenderingControlClient.js";
-import type { CreateClientArgs } from "../util/createEndpoint.js";
-import { receiverSettingsSchema } from "../util/receiverSettings.js";
+} from "#util/createRenderingControlClient.js";
+import type { CreateClientArgs } from "#util/createEndpoint.js";
+import { receiverSettingsSchema } from "#util/receiverSettings.js";
 
 const getConfigInputSchema = v.tuple([
   v.object({

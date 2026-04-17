@@ -10,34 +10,34 @@ import {
 import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
 
-import { createControlClient } from "../util/createControlClient.js";
+import { createControlClient } from "#util/createControlClient.js";
 import {
   defaultActControlPort,
   defaultActControlUrl,
   inputPiped,
   defaultRenderingControlUrl,
-} from "../env.js";
+} from "#env.js";
 import {
   receiverSettingsSchema,
   type ReceiverSettings,
-} from "../util/receiverSettings.js";
-import { getConfigsFromReceiverSettings } from "../util/getConfigsFromReceiverSettings.js";
-import { read as readStream } from "../util/streams.js";
-import { getOutput, type IOutput } from "../util/output.js";
+} from "#util/receiverSettings.js";
+import { getConfigsFromReceiverSettings } from "#util/getConfigsFromReceiverSettings.js";
+import { read as readStream } from "#util/streams.js";
+import { getOutput, type IOutput } from "#util/output.js";
 import * as discover from "./discover.js";
 import * as getConfig from "./get-config.js";
-import * as options from "../util/options.js";
-import { Renewable } from "../util/Renewable.js";
-import type { CreateClientArgs } from "../util/createEndpoint.js";
-import { createRenderingControlClient } from "../util/createRenderingControlClient.js";
-import receiverSettingsSchemaJson from "../receiverSettings.schema.json" with { type: "json" };
+import * as options from "#util/options.js";
+import { Renewable } from "#util/Renewable.js";
+import type { CreateClientArgs } from "#util/createEndpoint.js";
+import { createRenderingControlClient } from "#util/createRenderingControlClient.js";
+import receiverSettingsSchemaJson from "#receiverSettings.schema.json" with { type: "json" };
 import {
   jsonSchemaToOption,
   parseAsJsonSchema,
-} from "../util/jsonSchemaToOption.js";
-import { entries, isEmptyObject } from "../util/object.js";
-import { applyConfigs } from "../util/applyConfigs.js";
-import { resolvePath } from "../util/path.js";
+} from "#util/jsonSchemaToOption.js";
+import { entries, isEmptyObject } from "#util/object.js";
+import { applyConfigs } from "#util/applyConfigs.js";
+import { resolvePath } from "#util/path.js";
 
 const setConfigInputSchema = v.tuple([
   v.optional(v.string()),
