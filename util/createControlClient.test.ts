@@ -16,10 +16,10 @@ vi.mock("../env", () => ({
   upnpService: "urn:schemas-denon-com:service:ACT:1",
 }));
 
-const getAudioConfigRequestBody = `<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body><u:GetAudioConfig xmlns:u=\"urn:schemas-denon-com:service:ACT:1\"></u:GetAudioConfig></s:Body></s:Envelope>\r\n`;
+const getAudioConfigRequestBody = `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:GetAudioConfig xmlns:u="urn:schemas-denon-com:service:ACT:1"></u:GetAudioConfig></s:Body></s:Envelope>\r\n`;
 
 const audioConfigResponseBody =
-  `<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\"><s:Body>\n<u:GetAudioConfigResponse xmlns:u=\"urn:schemas-denon-com:service:ACT:1\">\r\n<AudioConfig>&lt;AudioConfig&gt;&lt;highpass&gt;80&lt;/highpass&gt;&lt;lowpass&gt;120&lt;/lowpass&gt;&lt;subwooferEnable&gt;1&lt;/subwooferEnable&gt;&lt;outputMode&gt;STEREO&lt;/outputMode&gt;&lt;ampBridged&gt;0&lt;/ampBridged&gt;&lt;soundMode&gt;STEREO&lt;/soundMode&gt;&lt;impedance&gt;&lt;/impedance&gt;&lt;ampPower&gt;1&lt;/ampPower&gt;&lt;availableSoundModes&gt;DIRECT,STEREO,VIRTUAL&lt;/availableSoundModes&gt;&lt;sourceDirect&gt;0&lt;/sourceDirect&gt;&lt;bassBoost&gt;0&lt;/bassBoost&gt;&lt;speakerOption&gt;NORMAL&lt;/speakerOption&gt;&lt;toneControlOption&gt;&lt;/toneControlOption&gt;&lt;tilt&gt;0&lt;/tilt&gt;&lt;digitalFilter&gt;FILTER_1&lt;/digitalFilter&gt;&lt;availableDigitalFilter&gt;FILTER_1,FILTER_2&lt;/availableDigitalFilter&gt;&lt;diracHistory&gt;1&lt;/diracHistory&gt;&lt;diracFilterList&gt;&lt;filter1&gt;Rhine&lt;/filter1&gt;&lt;/diracFilterList&gt;&lt;diracActiveFilter&gt;filter1&lt;/diracActiveFilter&gt;&lt;/AudioConfig&gt;</AudioConfig>\r\n</u:GetAudioConfigResponse>\r\n</s:Body> </s:Envelope>` as const;
+  `<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>\n<u:GetAudioConfigResponse xmlns:u="urn:schemas-denon-com:service:ACT:1">\r\n<AudioConfig>&lt;AudioConfig&gt;&lt;highpass&gt;80&lt;/highpass&gt;&lt;lowpass&gt;120&lt;/lowpass&gt;&lt;subwooferEnable&gt;1&lt;/subwooferEnable&gt;&lt;outputMode&gt;STEREO&lt;/outputMode&gt;&lt;ampBridged&gt;0&lt;/ampBridged&gt;&lt;soundMode&gt;STEREO&lt;/soundMode&gt;&lt;impedance&gt;&lt;/impedance&gt;&lt;ampPower&gt;1&lt;/ampPower&gt;&lt;availableSoundModes&gt;DIRECT,STEREO,VIRTUAL&lt;/availableSoundModes&gt;&lt;sourceDirect&gt;0&lt;/sourceDirect&gt;&lt;bassBoost&gt;0&lt;/bassBoost&gt;&lt;speakerOption&gt;NORMAL&lt;/speakerOption&gt;&lt;toneControlOption&gt;&lt;/toneControlOption&gt;&lt;tilt&gt;0&lt;/tilt&gt;&lt;digitalFilter&gt;FILTER_1&lt;/digitalFilter&gt;&lt;availableDigitalFilter&gt;FILTER_1,FILTER_2&lt;/availableDigitalFilter&gt;&lt;diracHistory&gt;1&lt;/diracHistory&gt;&lt;diracFilterList&gt;&lt;filter1&gt;Rhine&lt;/filter1&gt;&lt;/diracFilterList&gt;&lt;diracActiveFilter&gt;filter1&lt;/diracActiveFilter&gt;&lt;/AudioConfig&gt;</AudioConfig>\r\n</u:GetAudioConfigResponse>\r\n</s:Body> </s:Envelope>` as const;
 
 describe("control", () => {
   it("GetAudioConfig", async () => {
@@ -66,7 +66,7 @@ describe("control", () => {
         `HOST: ${controlArgs.host}`,
         `CONTENT-LENGTH: ${Buffer.byteLength(getAudioConfigRequestBody)}`,
         `ACCEPT-RANGES: bytes`,
-        `CONTENT-TYPE: text/xml; charset=\"utf-8\"`,
+        `CONTENT-TYPE: text/xml; charset="utf-8"`,
         `SOAPACTION: "urn:schemas-denon-com:service:ACT:1#GetAudioConfig"`,
         `USER-AGENT: model-m1/2.0.0`,
         ``,
