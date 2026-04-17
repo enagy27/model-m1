@@ -8,23 +8,30 @@ type HeosArgs = {
 type VolumeStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 type HeosCommand = {
-    "player/get_players": []
-    "player/volume_up": [{
-        pid: number;
-        step?: VolumeStep;
-    }]
-    "player/volume_down": [{
-        pid: number;
-        step?: VolumeStep;
-    }]
+  "player/get_players": [];
+  "player/volume_up": [
+    {
+      pid: number;
+      step?: VolumeStep;
+    },
+  ];
+  "player/volume_down": [
+    {
+      pid: number;
+      step?: VolumeStep;
+    },
+  ];
 };
 
 function command({ write }: Pick<HeosArgs, "write">) {
-  return function<C extends keyof HeosCommand>(pathname: C, ...args: HeosCommand[C]) {
+  return function <C extends keyof HeosCommand>(
+    pathname: C,
+    ...args: HeosCommand[C]
+  ) {
     const search = args ? qs.stringify(args, { addQueryPrefix: true }) : "";
 
     write(`heos://${pathname}${search}\r\n`);
-  }
+  };
 }
 
 const responseSchema = v.union([
