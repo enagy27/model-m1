@@ -69,7 +69,7 @@ describe("control", () => {
         `CONTENT-TYPE: text/xml; charset="utf-8"`,
         `HOST: ${controlArgs.host}`,
         `SOAPACTION: "urn:schemas-denon-com:service:ACT:1#GetAudioConfig"`,
-        `USER-AGENT: model-m1/2.0.1`,
+        `USER-AGENT: model-m1/2.1.0`,
         ``,
         getAudioConfigRequestBody,
       ].join("\r\n"),
