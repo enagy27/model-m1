@@ -1,9 +1,11 @@
 import * as v from "valibot";
 
-import type { IOutput } from "./output.js";
-import * as sockets from "./sockets.js";
-import type { ISocket } from "./sockets.js";
 import packageJson from "#package.json" with { type: "json" };
+
+import type { IOutput } from "./output.js";
+import type { ISocket } from "./sockets.js";
+
+import * as sockets from "./sockets.js";
 
 const primitiveSchema = v.union([
   v.bigint(),
@@ -12,14 +14,75 @@ const primitiveSchema = v.union([
   v.string(),
 ]);
 
-type BodyArgs = {
-  readonly action: string;
-  readonly data: Record<string, unknown>;
-  readonly service: string;
+export type CreateClientArgs = {
   build(this: void, data: unknown): string;
+  readonly host: string;
+  readonly output: IOutput;
+  parse(this: void, data: string): unknown;
+  readonly pathname: string;
+  readonly socket: ISocket;
 };
 
-function createBody({ action, data, build, service }: BodyArgs): string {
+type BodyArgs = {
+  readonly action: string;
+  build(this: void, data: unknown): string;
+  readonly data: Record<string, unknown>;
+  readonly service: string;
+};
+
+export function createEndpoint<
+  Requests extends Record<string, never | Record<string, unknown>>,
+  Responses extends Record<keyof Requests, (body: unknown) => unknown>,
+>(args: { responses: Responses; service: string }) {
+  const { responses, service } = args;
+
+  return function createClient({
+    build,
+    host,
+    output,
+    parse,
+    pathname,
+    socket,
+  }: CreateClientArgs) {
+    return async function controlRequest<K extends keyof Requests & string>(
+      ...args: Requests[K] extends never ? [K] : [K, Requests[K]]
+    ): Promise<ReturnType<Responses[K]>> {
+      const [action, data = {}] = args;
+
+      output.debug(
+        `control: invoking action="${action}" with data: ${JSON.stringify(data, null, 2)}`,
+      );
+
+      const body = createBody({ action, build, data, service });
+
+      const contentLength = Buffer.byteLength(body);
+      const headers = {
+        "ACCEPT-RANGES": "bytes",
+        "CONTENT-LENGTH": `${contentLength}`,
+        "CONTENT-TYPE": `text/xml; charset="utf-8"`,
+        HOST: host,
+        SOAPACTION: `"${service}#${action}"`,
+        "USER-AGENT": `${packageJson.name}/${packageJson.version}`,
+      };
+
+      const response = await sockets.request({
+        body,
+        headers,
+        method: "POST",
+        output,
+        pathname,
+        socket,
+      });
+
+      const xml = response.body ? parse(response.body) : undefined;
+
+      const responseParser = responses[action];
+      return responseParser(xml) as ReturnType<Responses[K]>;
+    };
+  };
+}
+
+function createBody({ action, build, data, service }: BodyArgs): string {
   const actionArgs = Object.fromEntries(
     Object.entries(data).map(([argName, value]: [string, unknown]) => {
       if (v.is(primitiveSchema, value)) {
@@ -32,8 +95,8 @@ function createBody({ action, data, build, service }: BodyArgs): string {
 
   const body = {
     "s:Envelope": {
-      "@_xmlns:s": "http://schemas.xmlsoap.org/soap/envelope/",
       "@_s:encodingStyle": "http://schemas.xmlsoap.org/soap/encoding/",
+      "@_xmlns:s": "http://schemas.xmlsoap.org/soap/envelope/",
 
       "s:Body": {
         [`u:${action}`]: {
@@ -47,65 +110,4 @@ function createBody({ action, data, build, service }: BodyArgs): string {
 
   // Include the CRLF so that it is calculated as part of the CONTENT-LENGTH
   return `${build(body)}\r\n`;
-}
-
-export type CreateClientArgs = {
-  readonly socket: ISocket;
-  readonly host: string;
-  readonly pathname: string;
-  readonly output: IOutput;
-  parse(this: void, data: string): unknown;
-  build(this: void, data: unknown): string;
-};
-
-export function createEndpoint<
-  Requests extends Record<string, Record<string, unknown> | never>,
-  Responses extends Record<keyof Requests, (body: unknown) => unknown>,
->(args: { responses: Responses; service: string }) {
-  const { service, responses } = args;
-
-  return function createClient({
-    socket,
-    host,
-    pathname,
-    output,
-    parse,
-    build,
-  }: CreateClientArgs) {
-    return async function controlRequest<K extends string & keyof Requests>(
-      ...args: Requests[K] extends never ? [K] : [K, Requests[K]]
-    ): Promise<ReturnType<Responses[K]>> {
-      const [action, data = {}] = args;
-
-      output.debug(
-        `control: invoking action="${action}" with data: ${JSON.stringify(data, null, 2)}`,
-      );
-
-      const body = createBody({ action, data, build, service });
-
-      const contentLength = Buffer.byteLength(body);
-      const headers = {
-        HOST: host,
-        "CONTENT-LENGTH": `${contentLength}`,
-        "ACCEPT-RANGES": "bytes",
-        "CONTENT-TYPE": `text/xml; charset="utf-8"`,
-        SOAPACTION: `"${service}#${action}"`,
-        "USER-AGENT": `${packageJson.name}/${packageJson.version}`,
-      };
-
-      const response = await sockets.request({
-        socket,
-        output,
-        method: "POST",
-        pathname,
-        headers,
-        body,
-      });
-
-      const xml = response.body ? parse(response.body) : undefined;
-
-      const responseParser = responses[action];
-      return responseParser(xml) as ReturnType<Responses[K]>;
-    };
-  };
 }

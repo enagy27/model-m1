@@ -5,7 +5,7 @@ import { Command } from "commander";
 
 import packageJson from "./package.json" with { type: "json" };
 
-const { name, description, version } = packageJson;
+const { description, name, version } = packageJson;
 
 import * as commands from "./commands/index.js";
 

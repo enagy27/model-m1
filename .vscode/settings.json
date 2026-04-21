@@ -1,6 +1,4 @@
 {
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "json.schemas": [
     {
       "fileMatch": ["preset.json", "*.preset.json"],

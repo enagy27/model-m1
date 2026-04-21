@@ -1,7 +1,3 @@
-export async function sleep(duration: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(() => resolve(), duration));
-}
-
 export async function awaitAtMost<T>(
   promise: Promise<T>,
   duration: number,
@@ -15,4 +11,8 @@ export async function awaitAtMost<T>(
   return Promise.race([promise, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId);
   });
+}
+
+export async function sleep(duration: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(() => resolve(), duration));
 }

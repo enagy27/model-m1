@@ -14,16 +14,16 @@ export function fromEntries<K extends string, V>(
   return Object.fromEntries(entries) as Record<K, V>;
 }
 
+export function isEmptyObject<T extends Record<string, unknown>>(
+  obj: T,
+): boolean {
+  return Object.entries(obj).length < 1;
+}
+
 export function removeNullishValueEntries<T extends Record<string, unknown>>(
   obj: T,
 ): NonNullishValues<T> {
   return Object.fromEntries(
     Object.entries(obj).filter(([, value]) => value != null),
   ) as NonNullishValues<T>;
-}
-
-export function isEmptyObject<T extends Record<string, unknown>>(
-  obj: T,
-): boolean {
-  return Object.entries(obj).length < 1;
 }

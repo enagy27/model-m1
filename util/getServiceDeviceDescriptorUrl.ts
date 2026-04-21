@@ -1,5 +1,6 @@
-import { fromEntries } from "./object.js";
 import type { IOutput } from "./output.js";
+
+import { fromEntries } from "./object.js";
 import { search } from "./upnp.js";
 
 export type DeviceData = {
@@ -7,32 +8,32 @@ export type DeviceData = {
   modelName: string;
 };
 
+type GetServiceDeviceDescriptorUrlArgs = {
+  host: string;
+  output: IOutput;
+  service: string;
+  socket: IDgramSocket;
+};
+
 type IDgramSocket = {
   bind(this: void): void;
-  send(this: void, msg: string): void;
-
-  on(this: void, eventName: "listening", listener: () => void): void;
-  on(
-    this: void,
-    eventName: "message",
-    listener: (msg: Pick<Buffer<ArrayBuffer>, "toString">) => void,
-  ): void;
-  on(this: void, eventName: "error", listener: (err: Error) => void): void;
-
   off(this: void, eventName: "listening", listener: () => void): void;
+
   off(
     this: void,
     eventName: "message",
     listener: (msg: Pick<Buffer<ArrayBuffer>, "toString">) => void,
   ): void;
   off(this: void, eventName: "error", listener: (err: Error) => void): void;
-};
+  on(this: void, eventName: "listening", listener: () => void): void;
 
-type GetServiceDeviceDescriptorUrlArgs = {
-  host: string;
-  socket: IDgramSocket;
-  service: string;
-  output: IOutput;
+  on(
+    this: void,
+    eventName: "message",
+    listener: (msg: Pick<Buffer<ArrayBuffer>, "toString">) => void,
+  ): void;
+  on(this: void, eventName: "error", listener: (err: Error) => void): void;
+  send(this: void, msg: string): void;
 };
 
 /**
@@ -46,9 +47,9 @@ type GetServiceDeviceDescriptorUrlArgs = {
  */
 export async function getServiceDeviceDescriptorUrl({
   host,
-  socket,
-  service,
   output,
+  service,
+  socket,
 }: GetServiceDeviceDescriptorUrlArgs): Promise<string> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
@@ -81,7 +82,7 @@ export async function getServiceDeviceDescriptorUrl({
         }),
       );
 
-      const { ST, LOCATION } = headers;
+      const { LOCATION, ST } = headers;
       output.debug(
         `getServiceDeviceDescriptorUrl: Message received on UPNP socket with ST="${ST}" and LOCATION="${LOCATION}"`,
       );

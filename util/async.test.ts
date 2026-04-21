@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { sleep, awaitAtMost } from "./async.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { awaitAtMost, sleep } from "./async.js";
 
 describe("sleep", () => {
   beforeEach(() => {

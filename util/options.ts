@@ -1,5 +1,9 @@
 import { Option } from "commander";
 
+export function actControlUrl() {
+  return new Option("--actControlUrl <URL>", "act control endpoint");
+}
+
 export function hostname() {
   return new Option(
     "--hostname <IP_ADDRESS>",
@@ -12,10 +16,6 @@ export function port() {
     "--port <PORT>",
     "Port used for connecting to the device for control purposes",
   ).argParser(Number);
-}
-
-export function actControlUrl() {
-  return new Option("--actControlUrl <URL>", "act control endpoint");
 }
 
 export function renderingControlUrl() {

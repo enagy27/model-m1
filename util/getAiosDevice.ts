@@ -1,5 +1,6 @@
-import * as v from "valibot";
 import { XMLParser } from "fast-xml-parser";
+import * as v from "valibot";
+
 import { ensureArray } from "./array.js";
 
 function xmlArray<
@@ -14,11 +15,11 @@ function xmlArray<
 }
 
 const serviceSchema = v.object({
-  serviceType: v.string(),
-  serviceId: v.string(),
-  SCPDURL: v.string(),
   controlURL: v.string(),
   eventSubURL: v.string(),
+  SCPDURL: v.string(),
+  serviceId: v.string(),
+  serviceType: v.string(),
 });
 
 export type Service = v.InferOutput<typeof serviceSchema>;
@@ -34,9 +35,9 @@ export type Device = v.InferOutput<typeof deviceSchema>;
 const aiosDeviceSchema = v.object({
   root: v.object({
     device: v.object({
+      deviceList: v.object({ device: xmlArray(deviceSchema) }),
       friendlyName: v.string(),
       modelName: v.string(),
-      deviceList: v.object({ device: xmlArray(deviceSchema) }),
     }),
   }),
 });

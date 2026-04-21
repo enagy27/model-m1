@@ -1,4 +1,3 @@
-import { type ReceiverSettings } from "./receiverSettings.js";
 import type {
   AudioConfig,
   LEDConfig,
@@ -7,14 +6,167 @@ import type {
   TouchLEDConfig,
   TvConfig,
 } from "./createControlClient.js";
+
 import {
   isEmptyObject,
   type NonNullishValues,
   removeNullishValueEntries,
 } from "./object.js";
+import { type ReceiverSettings } from "./receiverSettings.js";
+
+export type ConfigsFromReceiverSettings = {
+  AudioConfig: Partial<AudioConfig> | undefined;
+  Balance: number | undefined;
+  Bass: number | undefined;
+  LEDConfig: Partial<LEDConfig> | undefined;
+  LowLatencyConfig: LowLatencyConfig | undefined;
+  Subwoofer: number | undefined;
+  transcode: 0 | 1 | undefined;
+  Treble: number | undefined;
+  TvConfig: Partial<TvConfig> | undefined;
+  VolumeLimit: number | undefined;
+};
+
+type AudioConfigReceiverSettings = Pick<
+  ReceiverSettings,
+  | "digitalFilter"
+  | "diracLiveFilter"
+  | "highPassFilter"
+  | "lowPassFilter"
+  | "outputMode"
+  | "soundMode"
+>;
+
+type LEDConfigReceiverSettings = Pick<
+  ReceiverSettings,
+  "statusLedBrightness" | "touchControls"
+>;
+
+type LowLatencyConfigReceiverSettings = Pick<ReceiverSettings, "audioDelay">;
+
+type TvConfigReceiverSettings = Pick<
+  ReceiverSettings,
+  | "audioDelay"
+  | "dialogueEnhancement"
+  | "nightMode"
+  | "tvAutoplay"
+  | "tvInput"
+  | "tvRemoteCodes"
+>;
+
+/**
+ * Transforms user-facing settings to the internal command language
+ * of the device.
+ */
+export function getConfigsFromReceiverSettings({
+  audioDelay,
+  balance,
+  bass,
+  dialogueEnhancement,
+  digitalFilter,
+  diracLiveFilter,
+  highPassFilter,
+  lowPassFilter,
+  multiRoomAudioQuality,
+  nightMode,
+  outputMode,
+  soundMode,
+  statusLedBrightness,
+  subwoofer,
+  touchControls,
+  treble,
+  tvAutoplay,
+  tvInput,
+  tvRemoteCodes,
+  volumeLimit: VolumeLimit,
+}: ReceiverSettings): ConfigsFromReceiverSettings {
+  const LEDConfig = getLEDConfig({ statusLedBrightness, touchControls });
+  const LowLatencyConfig = getLowLatencyConfig({ audioDelay });
+
+  return {
+    AudioConfig: minifyConfig(
+      getAudioConfig({
+        digitalFilter,
+        diracLiveFilter,
+        highPassFilter,
+        lowPassFilter,
+        outputMode,
+        soundMode,
+      }),
+    ),
+
+    Balance: balance != null ? balance + 20 : undefined,
+
+    Bass: bass != null ? bass + 5 : undefined,
+
+    LEDConfig: LEDConfig != null ? minifyConfig(LEDConfig) : undefined,
+
+    LowLatencyConfig:
+      LowLatencyConfig != null ? minifyConfig(LowLatencyConfig) : undefined,
+
+    Subwoofer: subwoofer != null ? subwoofer + 15 : undefined,
+
+    transcode:
+      multiRoomAudioQuality != null
+        ? getTranscode(multiRoomAudioQuality)
+        : undefined,
+    Treble: treble != null ? treble + 5 : undefined,
+    TvConfig: minifyConfig(
+      getTvConfig({
+        dialogueEnhancement,
+        nightMode,
+        tvAutoplay,
+        tvInput,
+        tvRemoteCodes,
+      }),
+    ),
+    VolumeLimit,
+  };
+}
 
 function Binary(value: boolean) {
   return value ? 1 : 0;
+}
+
+function getAudioConfig({
+  digitalFilter,
+  diracLiveFilter,
+  highPassFilter,
+  lowPassFilter,
+  outputMode,
+  soundMode,
+}: AudioConfigReceiverSettings): Partial<AudioConfig> {
+  return {
+    digitalFilter:
+      digitalFilter != null ? getDigitalFilterValue(digitalFilter) : undefined,
+    diracActiveFilter: diracLiveFilter,
+    highpass: highPassFilter !== "off" ? highPassFilter : 0,
+    lowpass: lowPassFilter,
+    outputMode: outputMode === "stereo" ? "STEREO" : undefined,
+    soundMode: soundMode?.toUpperCase(),
+  };
+}
+
+function getDialogueEnhancementLevel(
+  level: NonNullable<ReceiverSettings["dialogueEnhancement"]>,
+): 0 | 1 | 2 | 3 {
+  switch (level) {
+    case "high": {
+      return 3;
+    }
+
+    case "low": {
+      return 1;
+    }
+
+    case "medium": {
+      return 2;
+    }
+
+    case "off": {
+      return 0;
+    }
+  }
 }
 
 function getDigitalFilterValue(
@@ -31,95 +183,6 @@ function getDigitalFilterValue(
   }
 }
 
-function getDialogueEnhancementLevel(
-  level: NonNullable<ReceiverSettings["dialogueEnhancement"]>,
-): 0 | 1 | 2 | 3 {
-  switch (level) {
-    case "off": {
-      return 0;
-    }
-
-    case "low": {
-      return 1;
-    }
-
-    case "medium": {
-      return 2;
-    }
-
-    case "high": {
-      return 3;
-    }
-  }
-}
-
-function getTvInput(
-  tvInput: NonNullable<ReceiverSettings["tvInput"]>,
-): "ANY" | "HDMI-ARC" | "OPTICAL" | "NONE" {
-  switch (tvInput) {
-    case "auto": {
-      return "ANY";
-    }
-
-    case "hdmi": {
-      return "HDMI-ARC";
-    }
-
-    case "optical": {
-      return "OPTICAL";
-    }
-
-    case "none": {
-      return "NONE";
-    }
-  }
-}
-
-function minifyConfig<T extends Record<string, unknown>>(
-  config: T,
-): NonNullishValues<T> | undefined {
-  const withoutNullishValues = removeNullishValueEntries(config);
-  if (isEmptyObject(withoutNullishValues)) {
-    return undefined;
-  }
-
-  return withoutNullishValues;
-}
-
-type AudioConfigReceiverSettings = Pick<
-  ReceiverSettings,
-  | "lowPassFilter"
-  | "highPassFilter"
-  | "digitalFilter"
-  | "diracLiveFilter"
-  | "outputMode"
-  | "soundMode"
->;
-
-function getAudioConfig({
-  lowPassFilter,
-  highPassFilter,
-  digitalFilter,
-  diracLiveFilter,
-  outputMode,
-  soundMode,
-}: AudioConfigReceiverSettings): Partial<AudioConfig> {
-  return {
-    lowpass: lowPassFilter,
-    highpass: highPassFilter !== "off" ? highPassFilter : 0,
-    digitalFilter:
-      digitalFilter != null ? getDigitalFilterValue(digitalFilter) : undefined,
-    diracActiveFilter: diracLiveFilter,
-    outputMode: outputMode === "stereo" ? "STEREO" : undefined,
-    soundMode: soundMode?.toUpperCase(),
-  };
-}
-
-type LEDConfigReceiverSettings = Pick<
-  ReceiverSettings,
-  "statusLedBrightness" | "touchControls"
->;
-
 function getLEDConfig({
   statusLedBrightness,
   touchControls,
@@ -127,17 +190,17 @@ function getLEDConfig({
   const networkLED =
     statusLedBrightness != null
       ? ({
-          name: "NETWORK",
           brightness: statusLedBrightness,
+          name: "NETWORK",
         } satisfies NetworkLEDConfig)
       : undefined;
 
   const touchLED =
     touchControls != null
       ? ({
-          name: "TOUCH",
           enable: Binary(touchControls !== "off"),
           feedbackSoundsEnable: Binary(touchControls === "onWithSound"),
+          name: "TOUCH",
         } satisfies TouchLEDConfig)
       : undefined;
 
@@ -145,8 +208,6 @@ function getLEDConfig({
 
   return led.length > 0 ? { led } : undefined;
 }
-
-type LowLatencyConfigReceiverSettings = Pick<ReceiverSettings, "audioDelay">;
 
 function getLowLatencyConfig({
   audioDelay,
@@ -157,18 +218,14 @@ function getLowLatencyConfig({
 
   const enabled = audioDelay > 0 ? 1 : 0;
 
-  return { enabled, delay: audioDelay };
+  return { delay: audioDelay, enabled };
 }
 
-type TvConfigReceiverSettings = Pick<
-  ReceiverSettings,
-  | "audioDelay"
-  | "dialogueEnhancement"
-  | "nightMode"
-  | "tvAutoplay"
-  | "tvInput"
-  | "tvRemoteCodes"
->;
+function getTranscode(
+  multiRoomAudioQuality: NonNullable<ReceiverSettings["multiRoomAudioQuality"]>,
+): 0 | 1 {
+  return multiRoomAudioQuality === "normal" ? 1 : 0;
+}
 
 function getTvConfig({
   dialogueEnhancement,
@@ -188,6 +245,7 @@ function getTvConfig({
             level: getDialogueEnhancementLevel(dialogueEnhancement),
           }
         : undefined,
+    input: tvInput != null ? getTvInput(tvInput) : undefined,
     nightMode:
       nightMode != null
         ? {
@@ -197,97 +255,40 @@ function getTvConfig({
             level: nightMode !== "off" ? 1 : 0,
           }
         : undefined,
-    input: tvInput != null ? getTvInput(tvInput) : undefined,
     tvRemoteCodes:
       tvRemoteCodes != null ? Binary(tvRemoteCodes === "on") : undefined,
   };
 }
 
-function getTranscode(
-  multiRoomAudioQuality: NonNullable<ReceiverSettings["multiRoomAudioQuality"]>,
-): 0 | 1 {
-  return multiRoomAudioQuality === "normal" ? 1 : 0;
+function getTvInput(
+  tvInput: NonNullable<ReceiverSettings["tvInput"]>,
+): "ANY" | "HDMI-ARC" | "NONE" | "OPTICAL" {
+  switch (tvInput) {
+    case "auto": {
+      return "ANY";
+    }
+
+    case "hdmi": {
+      return "HDMI-ARC";
+    }
+
+    case "none": {
+      return "NONE";
+    }
+
+    case "optical": {
+      return "OPTICAL";
+    }
+  }
 }
 
-export type ConfigsFromReceiverSettings = {
-  AudioConfig: Partial<AudioConfig> | undefined;
-  LEDConfig: Partial<LEDConfig> | undefined;
-  LowLatencyConfig: LowLatencyConfig | undefined;
-  TvConfig: Partial<TvConfig> | undefined;
-  transcode: 1 | 0 | undefined;
-  VolumeLimit: number | undefined;
-  Balance: number | undefined;
-  Bass: number | undefined;
-  Subwoofer: number | undefined;
-  Treble: number | undefined;
-};
+function minifyConfig<T extends Record<string, unknown>>(
+  config: T,
+): NonNullishValues<T> | undefined {
+  const withoutNullishValues = removeNullishValueEntries(config);
+  if (isEmptyObject(withoutNullishValues)) {
+    return undefined;
+  }
 
-/**
- * Transforms user-facing settings to the internal command language
- * of the device.
- */
-export function getConfigsFromReceiverSettings({
-  soundMode,
-  dialogueEnhancement,
-  nightMode,
-  balance,
-  bass,
-  subwoofer,
-  treble,
-  multiRoomAudioQuality,
-  statusLedBrightness,
-  touchControls,
-  volumeLimit: VolumeLimit,
-  lowPassFilter,
-  digitalFilter,
-  diracLiveFilter,
-  outputMode,
-  highPassFilter,
-  tvInput,
-  tvAutoplay,
-  tvRemoteCodes,
-  audioDelay,
-}: ReceiverSettings): ConfigsFromReceiverSettings {
-  const LEDConfig = getLEDConfig({ statusLedBrightness, touchControls });
-  const LowLatencyConfig = getLowLatencyConfig({ audioDelay });
-
-  return {
-    AudioConfig: minifyConfig(
-      getAudioConfig({
-        soundMode,
-        lowPassFilter,
-        highPassFilter,
-        digitalFilter,
-        diracLiveFilter,
-        outputMode,
-      }),
-    ),
-
-    LEDConfig: LEDConfig != null ? minifyConfig(LEDConfig) : undefined,
-
-    LowLatencyConfig:
-      LowLatencyConfig != null ? minifyConfig(LowLatencyConfig) : undefined,
-
-    TvConfig: minifyConfig(
-      getTvConfig({
-        dialogueEnhancement,
-        nightMode,
-        tvAutoplay,
-        tvInput,
-        tvRemoteCodes,
-      }),
-    ),
-
-    transcode:
-      multiRoomAudioQuality != null
-        ? getTranscode(multiRoomAudioQuality)
-        : undefined,
-
-    VolumeLimit,
-
-    Balance: balance != null ? balance + 20 : undefined,
-    Bass: bass != null ? bass + 5 : undefined,
-    Subwoofer: subwoofer != null ? subwoofer + 15 : undefined,
-    Treble: treble != null ? treble + 5 : undefined,
-  };
+  return withoutNullishValues;
 }

@@ -1,19 +1,21 @@
 import * as v from "valibot";
-import { entries, fromEntries } from "./object.js";
+
 import type { IOutput } from "./output.js";
+
+import { entries, fromEntries } from "./object.js";
 import { serializeHeaders } from "./tcp.js";
 
 export type ISocketResponse = {
-  statusCode: number;
-  headers: Record<string, string | undefined>;
   body?: string;
+  headers: Record<string, string | undefined>;
+  statusCode: number;
 };
 
 const responseSchema = v.pipe(
   v.string(),
   v.transform((msg) => msg.split("\r\n")),
   v.transform(
-    (lines): { status: string; headers: string[]; body?: string[] } => {
+    (lines): { body?: string[]; headers: string[]; status: string } => {
       const [status, ...nonStatus] = lines;
 
       const headerBodySplitIndex = nonStatus.findIndex((line) => {
@@ -22,13 +24,13 @@ const responseSchema = v.pipe(
 
       const bodyEmpty = headerBodySplitIndex < 0;
       if (bodyEmpty) {
-        return { status, headers: nonStatus };
+        return { headers: nonStatus, status };
       }
 
       const headers = nonStatus.slice(0, headerBodySplitIndex);
       const body = nonStatus.slice(headerBodySplitIndex + 1);
 
-      return { status, headers, body };
+      return { body, headers, status };
     },
   ),
   v.transform((lines) => {
@@ -52,29 +54,115 @@ const responseSchema = v.pipe(
 
     const headers = fromEntries(headerEntries);
     if (!lines.body) {
-      return { statusCode, headers };
+      return { headers, statusCode };
     }
 
     const body = lines.body.join("\r\n");
 
-    return { statusCode, headers, body };
+    return { body, headers, statusCode };
   }),
   v.object({
-    statusCode: v.number(),
-    headers: v.record(v.string(), v.string()),
     body: v.optional(v.string()),
+    headers: v.record(v.string(), v.string()),
+    statusCode: v.number(),
   }),
 );
 
-type RequestArgs = {
-  output: IOutput;
-  onResponse: (response: ISocketResponse) => void;
+export type ISocket = {
+  connect: (onConnect: () => void) => void;
+  destroy(this: void): void;
+  off(
+    this: void,
+    eventName: "data",
+    onData: (buffer: IStringifiable) => void,
+  ): void;
+  off(this: void, eventName: "error", onError: (error: Error) => void): void;
+  on(
+    this: void,
+    eventName: "data",
+    onData: (buffer: IStringifiable) => void,
+  ): void;
+  on(this: void, eventName: "error", onError: (error: Error) => void): void;
+  write: (data: string) => void;
 };
 
-function createPartialResponseQueue<T>() {
-  let current = null as T | null;
+export type ISocketRequest = {
+  body?: string;
+  headers: Record<string, string>;
+  method: "POST";
+  output: IOutput;
+  pathname: string;
+  protocol?: "HTTP/1.1";
+  socket: ISocket;
+};
 
-  const pop = (): T | null => {
+type IStringifiable = { toString: () => string };
+
+type RequestArgs = {
+  onResponse: (response: ISocketResponse) => void;
+  output: IOutput;
+};
+
+export async function request({
+  body,
+  headers = {},
+  method,
+  output,
+  pathname,
+  protocol = "HTTP/1.1",
+  socket,
+}: ISocketRequest): Promise<ISocketResponse> {
+  return new Promise<ISocketResponse>((resolve, reject) => {
+    const onData = createResponseHandler({ onResponse, output });
+
+    const cleanup = () => {
+      output.debug(`cleaning up sockets`);
+
+      socket.off("data", onData);
+      socket.off("error", onError);
+      socket.destroy();
+    };
+
+    function onResponse(this: void, response: ISocketResponse) {
+      cleanup();
+
+      resolve(response);
+      output.debug(
+        `resolved with socket response: ${JSON.stringify(response, null, 2)}`,
+      );
+    }
+
+    function onError(this: void, error: Error) {
+      cleanup();
+
+      reject(error);
+      output.error(`rejected with error: ${error}`);
+    }
+
+    function onConnect(this: void) {
+      const command = [
+        `${method} ${pathname} ${protocol}`,
+        serializeHeaders(entries(headers)),
+        "",
+        body,
+      ]
+        .filter((line) => line != null)
+        .join("\r\n");
+
+      socket.write(command);
+      output.debug(`wrote command: ${command}`);
+    }
+
+    socket.on("data", onData);
+    socket.on("error", onError);
+    socket.connect(onConnect);
+  });
+}
+
+function createPartialResponseQueue<T>() {
+  let current = null as null | T;
+
+  const pop = (): null | T => {
     const popped = current;
     current = null;
 
@@ -85,16 +173,12 @@ function createPartialResponseQueue<T>() {
     current = value;
   };
 
-  return { push, pop };
-}
-
-function getContentLength(headers: Record<string, string | undefined>): number {
-  return Number(headers["CONTENT-LENGTH"] ?? 0);
+  return { pop, push };
 }
 
 function createResponseHandler({
-  output,
   onResponse: onResponseArg,
+  output,
 }: RequestArgs) {
   const partialResponseQueue = createPartialResponseQueue<ISocketResponse>();
 
@@ -180,88 +264,6 @@ function createResponseHandler({
   return onData;
 }
 
-type IStringifiable = { toString: () => string };
-
-export type ISocket = {
-  write: (data: string) => void;
-  connect: (onConnect: () => void) => void;
-  on(
-    this: void,
-    eventName: "data",
-    onData: (buffer: IStringifiable) => void,
-  ): void;
-  on(this: void, eventName: "error", onError: (error: Error) => void): void;
-  off(
-    this: void,
-    eventName: "data",
-    onData: (buffer: IStringifiable) => void,
-  ): void;
-  off(this: void, eventName: "error", onError: (error: Error) => void): void;
-  destroy(this: void): void;
-};
-
-export type ISocketRequest = {
-  socket: ISocket;
-  output: IOutput;
-  method: "POST";
-  pathname: string;
-  protocol?: "HTTP/1.1";
-  headers: Record<string, string>;
-  body?: string;
-};
-
-export async function request({
-  socket,
-  output,
-  method,
-  pathname,
-  protocol = "HTTP/1.1",
-  headers = {},
-  body,
-}: ISocketRequest): Promise<ISocketResponse> {
-  return new Promise<ISocketResponse>((resolve, reject) => {
-    const onData = createResponseHandler({ output, onResponse });
-
-    const cleanup = () => {
-      output.debug(`cleaning up sockets`);
-
-      socket.off("data", onData);
-      socket.off("error", onError);
-      socket.destroy();
-    };
-
-    function onResponse(this: void, response: ISocketResponse) {
-      cleanup();
-
-      resolve(response);
-      output.debug(
-        `resolved with socket response: ${JSON.stringify(response, null, 2)}`,
-      );
-    }
-
-    function onError(this: void, error: Error) {
-      cleanup();
-
-      reject(error);
-      output.error(`rejected with error: ${error}`);
-    }
-
-    function onConnect(this: void) {
-      const command = [
-        `${method} ${pathname} ${protocol}`,
-        serializeHeaders(entries(headers)),
-        "",
-        body,
-      ]
-        .filter((line) => line != null)
-        .join("\r\n");
-
-      socket.write(command);
-      output.debug(`wrote command: ${command}`);
-    }
-
-    socket.on("data", onData);
-    socket.on("error", onError);
-    socket.connect(onConnect);
-  });
+function getContentLength(headers: Record<string, string | undefined>): number {
+  return Number(headers["CONTENT-LENGTH"] ?? 0);
 }
