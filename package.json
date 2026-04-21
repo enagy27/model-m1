@@ -1,6 +1,6 @@
 {
   "name": "model-m1",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "CLI tool and SDK for adjusting settings on the Marantz Model M1",
   "keywords": [
     "marantz",
@@ -18,6 +18,13 @@
   "license": "GPL-3.0-only",
   "author": "enagy27",
   "type": "module",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "imports": {
     "#*": "./*"
   },

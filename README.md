@@ -29,7 +29,7 @@ Or run directly with npx:
 npx model-m1
 ```
 
-## Usage
+## CLI Usage
 
 ### help
 
@@ -90,6 +90,101 @@ Pipe hostname from discover:
 ```bash
 model-m1 discover | model-m1 set-config preset.json
 ```
+
+## SDK Usage
+
+You can also use the SDK programmatically to control your device.
+
+### Basic Example
+
+```ts
+import net from "net";
+import XMLBuilder from "fast-xml-builder";
+import { XMLParser } from "fast-xml-parser";
+import { createControlClient, createRenderingControlClient } from "model-m1";
+import type { ISocket } from "model-m1";
+
+const port = 60006;
+const hostname = "192.168.1.100";
+const host = `${hostname}:${port}`;
+
+// Create XML parser/builder
+const parser = new XMLParser({ ignoreAttributes: false });
+const builder = new XMLBuilder({ ignoreAttributes: false });
+
+// The server will disconnect with each request, so we'll wrap
+// the destroy function. Internally this uses the Renewable class
+// but I felt that was not worth maintaining as a package export.
+// If you would prefer that pattern it may be worth copying into your
+// codebase
+let currentSocket = new net.Socket();
+const socket = {
+  connect: (onConnect) => currentSocket.connect(port, hostname, onConnect),
+  off: (eventName, cb) => currentSocket.off(eventName, cb),
+  on: (eventName, cb) => currentSocket.on(eventName, cb),
+  write: (data) => currentSocket.write(data),
+  destroy: () => {
+    currentSocket.destroy();
+    currentSocket = new net.Socket();
+  },
+} satisfies ISocket;
+
+// Create control client
+const controlClient = createControlClient({
+  output: console,
+  socket,
+  host,
+  pathname: "/ACT/control",
+  build: (data) => builder.build(data),
+  parse: (data) => parser.parse(data),
+});
+
+// Get audio config
+const audioConfig = await controlClient("GetAudioConfig");
+
+// Set audio config (the nesting here comes from XML serialization)
+await controlClient("SetAudioConfig", {
+  AudioConfig: {
+    AudioConfig: {
+      soundMode: "STEREO",
+      highpass: 80,
+      lowpass: 120,
+    },
+  },
+});
+
+// Create rendering control client for volume/EQ
+const renderingClient = createRenderingControlClient({
+  output: console,
+  socket,
+  host,
+  pathname: "/upnp/control/renderer_dvc/RenderingControl",
+  build: (data) => builder.build(data),
+  parse: (data) => parser.parse(data),
+});
+
+// Get bass level
+const bass = await renderingClient("X_GetBass", {
+  Channel: "Master",
+  InstanceID: 0,
+});
+```
+
+### Available Control Client Methods
+
+- `GetAudioConfig` / `SetAudioConfig` - Sound mode, crossover, digital filters
+- `GetTvConfig` / `SetTvConfig` - TV input, dialogue enhancement, night mode
+- `GetLEDConfig` / `SetLEDConfig` - Status LED brightness, touch controls
+- `GetLowLatencyConfig` / `SetLowLatencyConfig` - Audio delay settings
+- `SetTranscode` - Multi-room audio quality
+- `SetVolumeLimit` - Maximum volume limit
+
+### Available Rendering Control Client Methods
+
+- `X_GetBass` / `X_SetBass` - Bass EQ level
+- `X_GetTreble` / `X_SetTreble` - Treble EQ level
+- `X_GetBalance` / `X_SetBalance` - Left/right balance
+- `X_GetSubwoofer` / `X_SetSubwoofer` - Subwoofer level
 
 ## Development
 
