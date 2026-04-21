@@ -1,21 +1,21 @@
+import { Command } from "commander";
 import dgram from "dgram";
 import * as v from "valibot";
-import { Command } from "commander";
 
-import { getServiceDeviceDescriptorUrl } from "#util/getServiceDeviceDescriptorUrl.js";
-import { type AiosDevice, getAiosDevice } from "#util/getAiosDevice.js";
-import { findDevices } from "#util/findDevices.js";
 import {
-  upnpService,
+  outputPiped,
   upnpAddress,
   upnpPort,
-  outputPiped,
   upnpRenderingControlService,
+  upnpService,
 } from "#env.js";
-import { getOutput, type IOutput } from "#util/output.js";
 import { awaitAtMost } from "#util/async.js";
-import * as options from "#util/options.js";
+import { findDevices } from "#util/findDevices.js";
+import { type AiosDevice, getAiosDevice } from "#util/getAiosDevice.js";
+import { getServiceDeviceDescriptorUrl } from "#util/getServiceDeviceDescriptorUrl.js";
 import { fromEntries } from "#util/object.js";
+import * as options from "#util/options.js";
+import { getOutput, type IOutput } from "#util/output.js";
 
 type DiscoverArgs = {
   friendlyName?: string;
@@ -27,8 +27,8 @@ async function discoverImpl({ friendlyName, modelName, output }: DiscoverArgs) {
   let deviceDescriptorUrl: string | undefined;
   try {
     const socket = dgram.createSocket({
-      type: "udp4",
       reuseAddr: true,
+      type: "udp4",
     });
 
     output.debug(
@@ -36,12 +36,12 @@ async function discoverImpl({ friendlyName, modelName, output }: DiscoverArgs) {
     );
     deviceDescriptorUrl = await getServiceDeviceDescriptorUrl({
       host: `${upnpAddress}:${upnpPort}`,
-      service: upnpService,
       output,
+      service: upnpService,
       socket: {
         bind: () => socket.bind(),
-        on: (eventName, listener) => socket.on(eventName, listener),
         off: (eventName, listener) => socket.on(eventName, listener),
+        on: (eventName, listener) => socket.on(eventName, listener),
         send: (message) => socket.send(message, upnpPort, upnpAddress),
       },
     });
@@ -86,15 +86,15 @@ async function discoverImpl({ friendlyName, modelName, output }: DiscoverArgs) {
 
   const { hostname, port } = new URL(deviceDescriptorUrl);
 
-  return { hostname, port: Number(port), devices };
+  return { devices, hostname, port: Number(port) };
 }
 
 const discoverInputSchema = v.tuple([
   v.object({
     friendlyName: v.optional(v.string()),
+    logLevel: v.picklist(options.logLevels),
     modelName: v.optional(v.string()),
     timeout: v.number(),
-    logLevel: v.picklist(options.logLevels),
   }),
 ]);
 
@@ -122,20 +122,20 @@ export const pipedOutputSchema = v.pipe(
   }),
   v.optional(
     v.object({
-      hostname: v.pipe(v.string(), v.ipv4()),
-      port: v.number(),
       devices: v.array(
         v.object({
           serviceList: v.object({
             service: v.array(
               v.object({
-                serviceType: v.string(),
                 controlURL: v.string(),
+                serviceType: v.string(),
               }),
             ),
           }),
         }),
       ),
+      hostname: v.pipe(v.string(), v.ipv4()),
+      port: v.number(),
     }),
   ),
   v.transform((data) => {
@@ -143,10 +143,10 @@ export const pipedOutputSchema = v.pipe(
       return {};
     }
 
-    const { hostname, port, devices } = data;
+    const { devices, hostname, port } = data;
 
     const serviceTypeToControlUrlEntries = devices.flatMap((device) => {
-      return device.serviceList.service.map(({ serviceType, controlURL }) => {
+      return device.serviceList.service.map(({ controlURL, serviceType }) => {
         return [serviceType, controlURL] as const;
       });
     });
@@ -157,7 +157,7 @@ export const pipedOutputSchema = v.pipe(
     const renderingControlUrl =
       serviceTypeToControlUrl[upnpRenderingControlService];
 
-    return { hostname, port, actControlUrl, renderingControlUrl };
+    return { actControlUrl, hostname, port, renderingControlUrl };
   }),
 );
 
@@ -173,7 +173,7 @@ export const discover = new Command()
   .action(async (...args: unknown[]) => {
     const inputs = v.parse(discoverSchema, args);
 
-    const { friendlyName, modelName, timeout, logLevel } = inputs;
+    const { friendlyName, logLevel, modelName, timeout } = inputs;
     const output = getOutput({ logLevel });
     output.debug(`discover input: ${JSON.stringify(inputs, null, 2)}`);
 
@@ -191,12 +191,12 @@ export const discover = new Command()
       const { hostname, port } = discovered;
       const flattenedDevicesAndServices = discovered.devices.flatMap(
         ({ serviceList, ...device }) => {
-          return serviceList.service.map(({ serviceType, controlURL }) => ({
+          return serviceList.service.map(({ controlURL, serviceType }) => ({
             ...device,
+            controlURL,
             hostname,
             port,
             serviceType,
-            controlURL,
           }));
         },
       );

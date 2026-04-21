@@ -1,6 +1,3 @@
-import net from "net";
-import * as v from "valibot";
-import fs from "fs/promises";
 import {
   Argument,
   Command,
@@ -9,45 +6,50 @@ import {
 } from "commander";
 import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
+import fs from "fs/promises";
+import net from "net";
+import * as v from "valibot";
 
-import { createControlClient } from "#util/createControlClient.js";
+import type { CreateClientArgs } from "#util/createEndpoint.js";
+
 import {
   defaultActControlPort,
   defaultActControlUrl,
-  inputPiped,
   defaultRenderingControlUrl,
+  inputPiped,
 } from "#env.js";
-import {
-  receiverSettingsSchema,
-  type ReceiverSettings,
-} from "#util/receiverSettings.js";
-import { getConfigsFromReceiverSettings } from "#util/getConfigsFromReceiverSettings.js";
-import { read as readStream } from "#util/streams.js";
-import { getOutput, type IOutput } from "#util/output.js";
-import * as discover from "./discover.js";
-import * as getConfig from "./get-config.js";
-import * as options from "#util/options.js";
-import { Renewable } from "#util/Renewable.js";
-import type { CreateClientArgs } from "#util/createEndpoint.js";
-import { createRenderingControlClient } from "#util/createRenderingControlClient.js";
 import receiverSettingsSchemaJson from "#receiverSettings.schema.json" with { type: "json" };
+import { applyConfigs } from "#util/applyConfigs.js";
+import { createControlClient } from "#util/createControlClient.js";
+import { createRenderingControlClient } from "#util/createRenderingControlClient.js";
+import { getConfigsFromReceiverSettings } from "#util/getConfigsFromReceiverSettings.js";
 import {
   jsonSchemaToOption,
   parseAsJsonSchema,
 } from "#util/jsonSchemaToOption.js";
 import { entries, isEmptyObject } from "#util/object.js";
-import { applyConfigs } from "#util/applyConfigs.js";
+import * as options from "#util/options.js";
+import { getOutput, type IOutput } from "#util/output.js";
 import { resolvePath } from "#util/path.js";
+import {
+  type ReceiverSettings,
+  receiverSettingsSchema,
+} from "#util/receiverSettings.js";
+import { Renewable } from "#util/Renewable.js";
+import { read as readStream } from "#util/streams.js";
+
+import * as discover from "./discover.js";
+import * as getConfig from "./get-config.js";
 
 const setConfigInputSchema = v.tuple([
   v.optional(v.string()),
   v.object({
     ...receiverSettingsSchema.entries,
-    hostname: v.optional(v.pipe(v.string(), v.ipv4())),
-    port: v.number(),
     actControlUrl: v.string(),
-    renderingControlUrl: v.string(),
+    hostname: v.optional(v.pipe(v.string(), v.ipv4())),
     logLevel: v.picklist(options.logLevels),
+    port: v.number(),
+    renderingControlUrl: v.string(),
   }),
 ]);
 
@@ -67,17 +69,47 @@ const pipedInputSchema = v.union([
 
 type PipedInputs = v.InferOutput<typeof pipedInputSchema>;
 
+type ReadSettingsFromFileArgs = {
+  file: string;
+  output: IOutput;
+};
+
+/**
+ * Assembles various input sources across:
+ * - piped inputs from other commands
+ * - settings from the `file` argument
+ * - command line options
+ */
+async function getInputData(args: unknown[]) {
+  // Command line arguments
+  const options = v.parse(setConfigSchema, args);
+
+  const { file, logLevel } = options;
+  const output = getOutput({ logLevel });
+
+  // Piped in data stream
+  let pipedInputs: PipedInputs;
+  try {
+    pipedInputs = inputPiped ? await getPipedInputs(process.stdin) : {};
+  } catch (error) {
+    output.debug(`Failed to read input stream: ${error}`);
+    pipedInputs = {};
+  }
+
+  // Settings file (`file` argument)
+  const settingsFromFile = file
+    ? await readSettingsFromFile({ file, output })
+    : {};
+
+  return { ...pipedInputs, ...settingsFromFile, ...options };
+}
+
 /** Reads and parses piped input data */
 async function getPipedInputs(stream: NodeJS.ReadStream): Promise<PipedInputs> {
   const stdinData = await readStream(stream);
 
   return v.parse(pipedInputSchema, stdinData);
 }
-
-type ReadSettingsFromFileArgs = {
-  file: string;
-  output: IOutput;
-};
 
 /** Reads and parses the `file` argument */
 async function readSettingsFromFile({
@@ -110,36 +142,6 @@ async function readSettingsFromFile({
   }
 }
 
-/**
- * Assembles various input sources across:
- * - piped inputs from other commands
- * - settings from the `file` argument
- * - command line options
- */
-async function getInputData(args: unknown[]) {
-  // Command line arguments
-  const options = v.parse(setConfigSchema, args);
-
-  const { logLevel, file } = options;
-  const output = getOutput({ logLevel });
-
-  // Piped in data stream
-  let pipedInputs: PipedInputs;
-  try {
-    pipedInputs = inputPiped ? await getPipedInputs(process.stdin) : {};
-  } catch (error) {
-    output.debug(`Failed to read input stream: ${error}`);
-    pipedInputs = {};
-  }
-
-  // Settings file (`file` argument)
-  const settingsFromFile = file
-    ? await readSettingsFromFile({ file, output })
-    : {};
-
-  return { ...pipedInputs, ...settingsFromFile, ...options };
-}
-
 function withSettingsOptions(command: Command): Command {
   const optionDescriptors = entries(receiverSettingsSchemaJson.properties).map(
     ([name, unparsedSchema]) => {
@@ -150,7 +152,7 @@ function withSettingsOptions(command: Command): Command {
   );
 
   const options = optionDescriptors.map(
-    ({ flags, description, choices, argParser }) => {
+    ({ argParser, choices, description, flags }) => {
       const withChoices = (opt: Option): Option => {
         return choices ? opt.choices(choices) : opt;
       };
@@ -185,10 +187,10 @@ export const setConfig = withSettingsOptions(
 ).action(async (...args: unknown[]) => {
   const inputs = await getInputData(args);
   const {
-    logLevel,
-    hostname,
-    port,
     actControlUrl,
+    hostname,
+    logLevel,
+    port,
     renderingControlUrl,
     ...settingsOptions
   } = inputs;
@@ -223,16 +225,16 @@ export const setConfig = withSettingsOptions(
   const parser = new XMLParser({ ignoreAttributes: false });
 
   const clientArgs = {
+    build: (data) => builder.build(data),
     host: `${hostname}:${port}`,
     output,
     parse: (data) => parser.parse(data),
-    build: (data) => builder.build(data),
     socket: {
-      write: (data) => socket.current.write(data),
-      on: (eventName, cb) => socket.current.on(eventName, cb),
-      off: (eventName, cb) => socket.current.off(eventName, cb),
       connect: (cb) => socket.current.connect(port, hostname, cb),
       destroy: () => socket.renew(),
+      off: (eventName, cb) => socket.current.off(eventName, cb),
+      on: (eventName, cb) => socket.current.on(eventName, cb),
+      write: (data) => socket.current.write(data),
     },
   } satisfies Omit<CreateClientArgs, "pathname">;
 
@@ -250,10 +252,10 @@ export const setConfig = withSettingsOptions(
     const configs = getConfigsFromReceiverSettings(receiverSettings);
 
     await applyConfigs({
-      controlClient,
-      renderingControlClient,
       configs,
+      controlClient,
       output,
+      renderingControlClient,
     });
 
     output.log("Settings applied successfully.");

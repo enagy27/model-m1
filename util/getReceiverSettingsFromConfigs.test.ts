@@ -1,13 +1,15 @@
-import { describe, it, expect, vi } from "vitest";
-import {
-  getReceiverSettingsFromConfigs,
-  type GetReceiverSettingsFromConfigsArgs,
-} from "./getReceiverSettingsFromConfigs.js";
-import type { ReceiverSettings } from "./receiverSettings.js";
+import { describe, expect, it, vi } from "vitest";
+
 import type {
   NetworkLEDConfig,
   TouchLEDConfig,
 } from "./createControlClient.js";
+import type { ReceiverSettings } from "./receiverSettings.js";
+
+import {
+  getReceiverSettingsFromConfigs,
+  type GetReceiverSettingsFromConfigsArgs,
+} from "./getReceiverSettingsFromConfigs.js";
 
 type PartialAudioConfig = GetReceiverSettingsFromConfigsArgs["AudioConfig"];
 type PartialTvConfig = GetReceiverSettingsFromConfigsArgs["TvConfig"];
@@ -18,12 +20,76 @@ function AudioConfigFixture(
   return {
     digitalFilter: "FILTER_1",
     diracActiveFilter: "filter1",
-    outputMode: "STEREO",
     highpass: 100,
     lowpass: 100,
+    outputMode: "STEREO",
     soundMode: "STEREO",
     ...overrides,
   };
+}
+
+function configsFixture(
+  overrides: Partial<GetReceiverSettingsFromConfigsArgs>,
+): GetReceiverSettingsFromConfigsArgs {
+  return {
+    AudioConfig: AudioConfigFixture(),
+    Balance: 20,
+    Bass: 5,
+    LEDConfig: { led: [networkLEDConfigFigure(), touchLEDConfigFigure()] },
+    LowLatencyConfig: { delay: 100, enabled: 1 },
+    output: {
+      debug: vi.fn(),
+      error: vi.fn(),
+      log: vi.fn(),
+      table: vi.fn(),
+    },
+    Subwoofer: 15,
+    transcode: 1,
+    Treble: 5,
+    TvConfig: TvConfigFixture(),
+    VolumeLimit: 100,
+    ...overrides,
+  };
+}
+
+function networkLEDConfigFigure(
+  overrides?: Partial<NetworkLEDConfig>,
+): NetworkLEDConfig {
+  return { brightness: 100, name: "NETWORK", ...overrides };
+}
+
+function receiverSettingsFixture(
+  overrides: ReceiverSettings,
+): ReceiverSettings {
+  return {
+    audioDelay: 100,
+    balance: 0,
+    bass: 0,
+    dialogueEnhancement: "off",
+    digitalFilter: "filter1",
+    diracLiveFilter: "filter1",
+    highPassFilter: 100,
+    lowPassFilter: 100,
+    multiRoomAudioQuality: "normal",
+    nightMode: "off",
+    outputMode: "stereo",
+    soundMode: "stereo",
+    statusLedBrightness: 100,
+    subwoofer: 0,
+    touchControls: "onWithSound",
+    treble: 0,
+    tvAutoplay: "on",
+    tvInput: "auto",
+    tvRemoteCodes: "on",
+    volumeLimit: 100,
+    ...overrides,
+  };
+}
+
+function touchLEDConfigFigure(
+  overrides?: Partial<TouchLEDConfig>,
+): TouchLEDConfig {
+  return { enable: 1, feedbackSoundsEnable: 1, name: "TOUCH", ...overrides };
 }
 
 function TvConfigFixture(
@@ -39,74 +105,10 @@ function TvConfigFixture(
   };
 }
 
-function networkLEDConfigFigure(
-  overrides?: Partial<NetworkLEDConfig>,
-): NetworkLEDConfig {
-  return { name: "NETWORK", brightness: 100, ...overrides };
-}
-
-function touchLEDConfigFigure(
-  overrides?: Partial<TouchLEDConfig>,
-): TouchLEDConfig {
-  return { name: "TOUCH", enable: 1, feedbackSoundsEnable: 1, ...overrides };
-}
-
-function configsFixture(
-  overrides: Partial<GetReceiverSettingsFromConfigsArgs>,
-): GetReceiverSettingsFromConfigsArgs {
-  return {
-    AudioConfig: AudioConfigFixture(),
-    LEDConfig: { led: [networkLEDConfigFigure(), touchLEDConfigFigure()] },
-    LowLatencyConfig: { enabled: 1, delay: 100 },
-    TvConfig: TvConfigFixture(),
-    transcode: 1,
-    VolumeLimit: 100,
-    Balance: 20,
-    Bass: 5,
-    Subwoofer: 15,
-    Treble: 5,
-    output: {
-      debug: vi.fn(),
-      error: vi.fn(),
-      log: vi.fn(),
-      table: vi.fn(),
-    },
-    ...overrides,
-  };
-}
-
-function receiverSettingsFixture(
-  overrides: ReceiverSettings,
-): ReceiverSettings {
-  return {
-    audioDelay: 100,
-    dialogueEnhancement: "off",
-    digitalFilter: "filter1",
-    diracLiveFilter: "filter1",
-    highPassFilter: 100,
-    lowPassFilter: 100,
-    multiRoomAudioQuality: "normal",
-    nightMode: "off",
-    balance: 0,
-    bass: 0,
-    subwoofer: 0,
-    treble: 0,
-    outputMode: "stereo",
-    soundMode: "stereo",
-    statusLedBrightness: 100,
-    touchControls: "onWithSound",
-    tvAutoplay: "on",
-    tvInput: "auto",
-    tvRemoteCodes: "on",
-    volumeLimit: 100,
-    ...overrides,
-  };
-}
-
 describe("getReceiverSettingsFromConfigs", () => {
   it("audioDelay disabled", () => {
     const configs = configsFixture({
-      LowLatencyConfig: { enabled: 0, delay: 100 },
+      LowLatencyConfig: { delay: 100, enabled: 0 },
     });
 
     const settings = getReceiverSettingsFromConfigs(configs);
@@ -115,7 +117,7 @@ describe("getReceiverSettingsFromConfigs", () => {
 
   it("audioDelay enabled", () => {
     const configs = configsFixture({
-      LowLatencyConfig: { enabled: 1, delay: 325 },
+      LowLatencyConfig: { delay: 325, enabled: 1 },
     });
 
     const settings = getReceiverSettingsFromConfigs(configs);

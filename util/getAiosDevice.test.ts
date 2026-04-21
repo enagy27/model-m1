@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { getAiosDevice } from "./getAiosDevice.js";
 
 const aiosDeviceXml = readFileSync(
@@ -75,11 +76,11 @@ describe("getAiosDevice", () => {
     );
 
     expect(actService).toEqual({
-      serviceType: "urn:schemas-denon-com:service:ACT:1",
-      serviceId: "urn:denon-com:serviceId:ACT",
-      SCPDURL: "/ACT/SCPD.xml",
       controlURL: "/ACT/control",
       eventSubURL: "/ACT/event",
+      SCPDURL: "/ACT/SCPD.xml",
+      serviceId: "urn:denon-com:serviceId:ACT",
+      serviceType: "urn:schemas-denon-com:service:ACT:1",
     });
   });
 
@@ -90,11 +91,11 @@ describe("getAiosDevice", () => {
     const [firstService] = firstDevice.serviceList.service;
 
     expect(firstService).toEqual({
-      serviceType: "urn:schemas-upnp-org:service:AVTransport:1",
-      serviceId: "urn:upnp-org:serviceId:AVTransport",
-      SCPDURL: "/upnp/scpd/renderer_dvc/AVTransport.xml",
       controlURL: "/upnp/control/renderer_dvc/AVTransport",
       eventSubURL: "/upnp/event/renderer_dvc/AVTransport",
+      SCPDURL: "/upnp/scpd/renderer_dvc/AVTransport.xml",
+      serviceId: "urn:upnp-org:serviceId:AVTransport",
+      serviceType: "urn:schemas-upnp-org:service:AVTransport:1",
     });
   });
 
@@ -125,11 +126,11 @@ describe("getAiosDevice", () => {
     );
 
     expect(zoneControl).toEqual({
-      serviceType: "urn:schemas-denon-com:service:ZoneControl:2",
-      serviceId: "urn:denon-com:serviceId:ZoneControl",
-      SCPDURL: "/upnp/scpd/AiosServicesDvc/ZoneControl.xml",
       controlURL: "/upnp/control/AiosServicesDvc/ZoneControl",
       eventSubURL: "/upnp/event/AiosServicesDvc/ZoneControl",
+      SCPDURL: "/upnp/scpd/AiosServicesDvc/ZoneControl.xml",
+      serviceId: "urn:denon-com:serviceId:ZoneControl",
+      serviceType: "urn:schemas-denon-com:service:ZoneControl:2",
     });
   });
 

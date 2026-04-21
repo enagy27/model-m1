@@ -1,21 +1,21 @@
 import { type ControlClient } from "#util/createControlClient.js";
-import { type ConfigsFromReceiverSettings } from "#util/getConfigsFromReceiverSettings.js";
-import { type IOutput } from "#util/output.js";
 import { type RenderingControlClient } from "#util/createRenderingControlClient.js";
+import { type ConfigsFromReceiverSettings } from "#util/getConfigsFromReceiverSettings.js";
 import { entries, isEmptyObject } from "#util/object.js";
+import { type IOutput } from "#util/output.js";
 
 export type ApplyConfigsArgs = {
-  controlClient: ControlClient;
-  renderingControlClient: RenderingControlClient;
   configs: ConfigsFromReceiverSettings;
+  controlClient: ControlClient;
   output: IOutput;
+  renderingControlClient: RenderingControlClient;
 };
 
 export async function applyConfigs({
-  controlClient,
-  renderingControlClient,
   configs,
+  controlClient,
   output,
+  renderingControlClient,
 }: ApplyConfigsArgs) {
   for await (const [command, config] of entries(configs)) {
     if (config == null) {
@@ -40,6 +40,24 @@ export async function applyConfigs({
         break;
       }
 
+      case "Balance": {
+        await renderingControlClient("X_SetBalance", {
+          Channel: "Master",
+          DesiredBalance: config,
+          InstanceID: 0,
+        });
+        break;
+      }
+
+      case "Bass": {
+        await renderingControlClient("X_SetBass", {
+          Channel: "Master",
+          DesiredBass: config,
+          InstanceID: 0,
+        });
+        break;
+      }
+
       case "LEDConfig": {
         await controlClient("SetLEDConfig", {
           LEDConfig: { LEDConfig: config },
@@ -54,9 +72,11 @@ export async function applyConfigs({
         break;
       }
 
-      case "TvConfig": {
-        await controlClient("SetTvConfig", {
-          TvConfig: { TvConfig: config },
+      case "Subwoofer": {
+        await renderingControlClient("X_SetSubwoofer", {
+          Channel: "Master",
+          DesiredLevel: config,
+          InstanceID: 0,
         });
         break;
       }
@@ -68,45 +88,25 @@ export async function applyConfigs({
         break;
       }
 
+      case "Treble": {
+        await renderingControlClient("X_SetTreble", {
+          Channel: "Master",
+          DesiredTreble: config,
+          InstanceID: 0,
+        });
+        break;
+      }
+
+      case "TvConfig": {
+        await controlClient("SetTvConfig", {
+          TvConfig: { TvConfig: config },
+        });
+        break;
+      }
+
       case "VolumeLimit": {
         await controlClient("SetVolumeLimit", {
           VolumeLimit: config,
-        });
-        break;
-      }
-
-      case "Balance": {
-        await renderingControlClient("X_SetBalance", {
-          InstanceID: 0,
-          Channel: "Master",
-          DesiredBalance: config,
-        });
-        break;
-      }
-
-      case "Bass": {
-        await renderingControlClient("X_SetBass", {
-          InstanceID: 0,
-          Channel: "Master",
-          DesiredBass: config,
-        });
-        break;
-      }
-
-      case "Subwoofer": {
-        await renderingControlClient("X_SetSubwoofer", {
-          InstanceID: 0,
-          Channel: "Master",
-          DesiredLevel: config,
-        });
-        break;
-      }
-
-      case "Treble": {
-        await renderingControlClient("X_SetTreble", {
-          InstanceID: 0,
-          Channel: "Master",
-          DesiredTreble: config,
         });
         break;
       }

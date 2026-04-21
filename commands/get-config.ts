@@ -1,42 +1,44 @@
+import { Command, InvalidOptionArgumentError } from "commander";
+import XMLBuilder from "fast-xml-builder";
+import { XMLParser } from "fast-xml-parser";
 import net from "net";
 import * as v from "valibot";
-import { Command, InvalidOptionArgumentError } from "commander";
-import { XMLParser } from "fast-xml-parser";
-import XMLBuilder from "fast-xml-builder";
 
-import {
-  createControlClient,
-  type ControlClient,
-} from "#util/createControlClient.js";
+import type { CreateClientArgs } from "#util/createEndpoint.js";
+
 import {
   defaultActControlPort,
   defaultActControlUrl,
-  inputPiped,
   defaultRenderingControlUrl,
+  inputPiped,
 } from "#env.js";
-import { read as readStream } from "#util/streams.js";
-import { getOutput } from "#util/output.js";
-import * as discover from "./discover.js";
-import * as options from "#util/options.js";
-import { Renewable } from "#util/Renewable.js";
 import {
-  getReceiverSettingsFromConfigs,
-  type GetReceiverSettingsFromConfigsArgs,
-} from "#util/getReceiverSettingsFromConfigs.js";
+  type ControlClient,
+  createControlClient,
+} from "#util/createControlClient.js";
 import {
   createRenderingControlClient,
   type RenderingControlClient,
 } from "#util/createRenderingControlClient.js";
-import type { CreateClientArgs } from "#util/createEndpoint.js";
+import {
+  getReceiverSettingsFromConfigs,
+  type GetReceiverSettingsFromConfigsArgs,
+} from "#util/getReceiverSettingsFromConfigs.js";
+import * as options from "#util/options.js";
+import { getOutput } from "#util/output.js";
 import { receiverSettingsSchema } from "#util/receiverSettings.js";
+import { Renewable } from "#util/Renewable.js";
+import { read as readStream } from "#util/streams.js";
+
+import * as discover from "./discover.js";
 
 const getConfigInputSchema = v.tuple([
   v.object({
-    hostname: v.optional(v.pipe(v.string(), v.ipv4())),
-    port: v.number(),
     actControlUrl: v.string(),
-    renderingControlUrl: v.string(),
+    hostname: v.optional(v.pipe(v.string(), v.ipv4())),
     logLevel: v.picklist(options.logLevels),
+    port: v.number(),
+    renderingControlUrl: v.string(),
   }),
 ]);
 
@@ -66,12 +68,6 @@ export const pipedOutputSchema = v.pipe(
   v.transform((data = {}) => data),
 );
 
-async function getPipedInputs(stream: NodeJS.ReadStream): Promise<PipedInputs> {
-  const stdinData = await readStream(stream);
-
-  return v.parse(pipedInputSchema, stdinData);
-}
-
 async function getInputData(args: unknown[]) {
   // Command line arguments
   const options = v.parse(getConfigSchema, args);
@@ -91,21 +87,36 @@ async function getInputData(args: unknown[]) {
   return { ...pipedInputs, ...options };
 }
 
-const renderingControlArgs = {
-  InstanceID: 0,
-  Channel: "Master",
-} as const;
+async function getPipedInputs(stream: NodeJS.ReadStream): Promise<PipedInputs> {
+  const stdinData = await readStream(stream);
 
-type GetControlConfigsArgs = { controlClient: ControlClient };
+  return v.parse(pipedInputSchema, stdinData);
+}
+
+const renderingControlArgs = {
+  Channel: "Master",
+  InstanceID: 0,
+} as const;
 
 type ControlConfigs = Pick<
   GetReceiverSettingsFromConfigsArgs,
   | "AudioConfig"
   | "LEDConfig"
   | "LowLatencyConfig"
+  | "transcode"
   | "TvConfig"
   | "VolumeLimit"
-  | "transcode"
+>;
+
+type GetControlConfigsArgs = { controlClient: ControlClient };
+
+type GetRenderingControlConfigsArgs = {
+  renderingControlClient: RenderingControlClient;
+};
+
+type RenderingControlConfigs = Pick<
+  GetReceiverSettingsFromConfigsArgs,
+  "Balance" | "Bass" | "Subwoofer" | "Treble"
 >;
 
 async function getControlConfigs({
@@ -144,20 +155,11 @@ async function getControlConfigs({
     AudioConfig,
     LEDConfig,
     LowLatencyConfig,
-    TvConfig,
     transcode,
+    TvConfig,
     VolumeLimit,
   };
 }
-
-type GetRenderingControlConfigsArgs = {
-  renderingControlClient: RenderingControlClient;
-};
-
-type RenderingControlConfigs = Pick<
-  GetReceiverSettingsFromConfigsArgs,
-  "Subwoofer" | "Treble" | "Balance" | "Bass"
->;
 
 async function getRenderingControlConfigs({
   renderingControlClient,
@@ -192,10 +194,10 @@ async function getRenderingControlConfigs({
     bassEnvelope["s:Envelope"]["s:Body"]["u:X_GetBassResponse"];
 
   return {
-    Subwoofer: subwooferResponse.CurrentLevel,
-    Treble: trebleResponse.CurrentTreble,
     Balance: balanceResponse.CurrentBalance,
     Bass: bassResponse.CurrentBass,
+    Subwoofer: subwooferResponse.CurrentLevel,
+    Treble: trebleResponse.CurrentTreble,
   };
 }
 
@@ -209,10 +211,10 @@ export const getConfig = new Command("get-config")
   .action(async (...args: unknown[]) => {
     const inputs = await getInputData(args);
     const {
-      logLevel,
-      hostname,
-      port = defaultActControlPort,
       actControlUrl = defaultActControlUrl,
+      hostname,
+      logLevel,
+      port = defaultActControlPort,
       renderingControlUrl = defaultRenderingControlUrl,
     } = inputs;
 
@@ -234,16 +236,16 @@ export const getConfig = new Command("get-config")
     const builder = new XMLBuilder({ ignoreAttributes: false });
 
     const clientArgs = {
+      build: (data) => builder.build(data),
       host: `${hostname}:${port}`,
       output,
       parse: (data) => parser.parse(data),
-      build: (data) => builder.build(data),
       socket: {
-        write: (data) => socket.current.write(data),
-        on: (eventName, cb) => socket.current.on(eventName, cb),
-        off: (eventName, cb) => socket.current.off(eventName, cb),
         connect: (cb) => socket.current.connect(port, hostname, cb),
         destroy: () => socket.renew(),
+        off: (eventName, cb) => socket.current.off(eventName, cb),
+        on: (eventName, cb) => socket.current.on(eventName, cb),
+        write: (data) => socket.current.write(data),
       },
     } satisfies Omit<CreateClientArgs, "pathname">;
 

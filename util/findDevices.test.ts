@@ -1,23 +1,24 @@
-import { describe, it, expect } from "vitest";
-import { findDevices } from "./findDevices.js";
+import { describe, expect, it } from "vitest";
+
 import type { AiosDevice, Device, Service } from "./getAiosDevice.js";
 
-function createMockService(overrides: Partial<Service> = {}): Service {
-  return {
-    serviceType: "urn:schemas-denon-com:service:ACT:1",
-    serviceId: "urn:denon-com:serviceId:ACT",
-    SCPDURL: "/upnp/scpd/ACT/ACT.xml",
-    controlURL: "/ACT/control",
-    eventSubURL: "/ACT/event",
-    ...overrides,
-  };
-}
+import { findDevices } from "./findDevices.js";
 
 type CreateMockDeviceArgs = {
   friendlyName: string;
   modelName: string;
   services: Service[];
 };
+
+function createMockAiosDevice(devices: Device[]): AiosDevice {
+  const device = {
+    deviceList: { device: devices },
+    friendlyName: "Root Device",
+    modelName: "Root Model",
+  };
+
+  return { root: { device } };
+}
 
 function createMockDevice({
   friendlyName,
@@ -31,14 +32,15 @@ function createMockDevice({
   };
 }
 
-function createMockAiosDevice(devices: Device[]): AiosDevice {
-  const device = {
-    friendlyName: "Root Device",
-    modelName: "Root Model",
-    deviceList: { device: devices },
+function createMockService(overrides: Partial<Service> = {}): Service {
+  return {
+    controlURL: "/ACT/control",
+    eventSubURL: "/ACT/event",
+    SCPDURL: "/upnp/scpd/ACT/ACT.xml",
+    serviceId: "urn:denon-com:serviceId:ACT",
+    serviceType: "urn:schemas-denon-com:service:ACT:1",
+    ...overrides,
   };
-
-  return { root: { device } };
 }
 
 describe("findDevices", () => {
@@ -140,8 +142,8 @@ describe("findDevices", () => {
       });
 
       const otherService = createMockService({
-        serviceType: "urn:schemas-upnp-org:service:ContentDirectory:1",
         serviceId: "urn:upnp-org:serviceId:ContentDirectory",
+        serviceType: "urn:schemas-upnp-org:service:ContentDirectory:1",
       });
 
       const device = createMockDevice({

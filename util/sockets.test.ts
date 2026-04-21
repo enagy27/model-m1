@@ -1,9 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
 import { EventEmitter } from "node:events";
+import { describe, expect, it, vi } from "vitest";
+
+import type { IOutput } from "./output.js";
+import type { ISocket } from "./sockets.js";
 
 import { request } from "./sockets.js";
-import type { ISocket } from "./sockets.js";
-import type { IOutput } from "./output.js";
 
 describe("sockets", () => {
   describe("request", () => {
@@ -20,35 +21,35 @@ describe("sockets", () => {
       ].join("\r\n");
 
       const output = {
-        log: vi.fn(),
-        table: vi.fn(),
         debug: vi.fn(),
         error: vi.fn(),
+        log: vi.fn(),
+        table: vi.fn(),
       } satisfies IOutput;
 
       const socket = {
-        on: vi.fn((eventName, cb) => emitter.on(eventName, cb)),
-        off: vi.fn((eventName, cb) => emitter.off(eventName, cb)),
         connect: vi.fn((onConnect) => onConnect()),
         destroy: vi.fn(),
+        off: vi.fn((eventName, cb) => emitter.off(eventName, cb)),
+        on: vi.fn((eventName, cb) => emitter.on(eventName, cb)),
         write: vi.fn(() => emitter.emit("data", response)),
       } satisfies ISocket;
 
       const result = await request({
-        socket,
-        output,
-        method: "POST",
-        pathname: "/test",
         headers: {},
+        method: "POST",
+        output,
+        pathname: "/test",
+        socket,
       });
 
       expect(result).toEqual({
-        statusCode: 200,
+        body: responseBody,
         headers: {
           "CONTENT-LENGTH": `${Buffer.byteLength(responseBody)}`,
           "X-RESPONSE-HEADER": "response-value",
         },
-        body: responseBody,
+        statusCode: 200,
       });
     });
 
@@ -60,26 +61,26 @@ describe("sockets", () => {
       );
 
       const output = {
-        log: vi.fn(),
-        table: vi.fn(),
         debug: vi.fn(),
         error: vi.fn(),
+        log: vi.fn(),
+        table: vi.fn(),
       } satisfies IOutput;
 
       const socket = {
-        on: vi.fn((eventName, cb) => emitter.on(eventName, cb)),
-        off: vi.fn((eventName, cb) => emitter.off(eventName, cb)),
         connect: vi.fn((onConnect) => onConnect()),
         destroy: vi.fn(),
+        off: vi.fn((eventName, cb) => emitter.off(eventName, cb)),
+        on: vi.fn((eventName, cb) => emitter.on(eventName, cb)),
         write: vi.fn(() => emitter.emit("data", response)),
       } satisfies ISocket;
 
       const result = await request({
-        socket,
-        output,
-        method: "POST",
-        pathname: "/test",
         headers: {},
+        method: "POST",
+        output,
+        pathname: "/test",
+        socket,
       });
 
       expect(result.statusCode).toEqual(204);
@@ -90,17 +91,17 @@ describe("sockets", () => {
       const emitter = new EventEmitter();
 
       const output = {
-        log: vi.fn(),
-        table: vi.fn(),
         debug: vi.fn(),
         error: vi.fn(),
+        log: vi.fn(),
+        table: vi.fn(),
       } satisfies IOutput;
 
       const socket = {
-        on: vi.fn((eventName, cb) => emitter.on(eventName, cb)),
-        off: vi.fn((eventName, cb) => emitter.off(eventName, cb)),
         connect: vi.fn((onConnect) => onConnect()),
         destroy: vi.fn(),
+        off: vi.fn((eventName, cb) => emitter.off(eventName, cb)),
+        on: vi.fn((eventName, cb) => emitter.on(eventName, cb)),
         write: vi.fn(() =>
           emitter.emit("error", new Error("Connection refused")),
         ),
@@ -108,11 +109,11 @@ describe("sockets", () => {
 
       await expect(
         request({
-          socket,
-          output,
-          method: "POST",
-          pathname: "/test",
           headers: {},
+          method: "POST",
+          output,
+          pathname: "/test",
+          socket,
         }),
       ).rejects.toThrow("Connection refused");
     });

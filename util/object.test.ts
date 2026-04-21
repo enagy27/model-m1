@@ -1,9 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
   entries,
   fromEntries,
-  removeNullishValueEntries,
   isEmptyObject,
+  removeNullishValueEntries,
 } from "./object.js";
 
 describe("entries", () => {
@@ -27,11 +28,11 @@ describe("entries", () => {
 
   it("should handle objects with various value types", () => {
     const obj = {
+      arr: [1, 2, 3],
+      bool: false,
+      nested: { inner: "value" },
       num: 42,
       str: "test",
-      bool: false,
-      arr: [1, 2, 3],
-      nested: { inner: "value" },
     };
     const result = entries(obj);
 
@@ -64,14 +65,14 @@ describe("fromEntries", () => {
   });
 
   it("should handle entries with various value types", () => {
-    const input: Array<[string, string | number | boolean]> = [
+    const input: Array<[string, boolean | number | string]> = [
       ["str", "hello"],
       ["num", 42],
       ["bool", true],
     ];
     const result = fromEntries(input);
 
-    expect(result).toEqual({ str: "hello", num: 42, bool: true });
+    expect(result).toEqual({ bool: true, num: 42, str: "hello" });
   });
 
   it("should be inverse of entries", () => {

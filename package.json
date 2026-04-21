@@ -1,6 +1,6 @@
 {
   "name": "model-m1",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "CLI tool and SDK for adjusting settings on the Marantz Model M1",
   "keywords": [
     "marantz",
@@ -55,6 +55,7 @@
     "@valibot/to-json-schema": "^1.6.0",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-perfectionist": "^5.9.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",

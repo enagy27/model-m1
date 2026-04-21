@@ -1,11 +1,12 @@
 import type { PickDeep } from "type-fest";
 
+import type { AiosDevice, Device, Service } from "./getAiosDevice.js";
+
 import { ensureArray } from "./array.js";
-import type { Device, Service, AiosDevice } from "./getAiosDevice.js";
 
 type AiosDeviceMatchers = {
   device(device: Pick<Device, "friendlyName" | "modelName">): boolean;
-  service(service: Pick<Service, "serviceType" | "serviceId">): boolean;
+  service(service: Pick<Service, "serviceId" | "serviceType">): boolean;
 };
 
 export function findDevices(

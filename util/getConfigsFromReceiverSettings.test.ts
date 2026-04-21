@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  getConfigsFromReceiverSettings,
   type ConfigsFromReceiverSettings,
+  getConfigsFromReceiverSettings,
 } from "./getConfigsFromReceiverSettings.js";
 
 describe("getConfigsFromReceiverSettings", () => {
@@ -242,7 +243,7 @@ describe("getConfigsFromReceiverSettings", () => {
 
     expect(configs).toEqual({
       LEDConfig: {
-        led: [{ name: "NETWORK", brightness: 75 }],
+        led: [{ brightness: 75, name: "NETWORK" }],
       },
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
@@ -264,7 +265,7 @@ describe("getConfigsFromReceiverSettings", () => {
 
     expect(configs).toEqual({
       LEDConfig: {
-        led: [{ name: "TOUCH", enable: 0, feedbackSoundsEnable: 0 }],
+        led: [{ enable: 0, feedbackSoundsEnable: 0, name: "TOUCH" }],
       },
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
@@ -276,7 +277,7 @@ describe("getConfigsFromReceiverSettings", () => {
 
     expect(configs).toEqual({
       LEDConfig: {
-        led: [{ name: "TOUCH", enable: 1, feedbackSoundsEnable: 0 }],
+        led: [{ enable: 1, feedbackSoundsEnable: 0, name: "TOUCH" }],
       },
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
@@ -288,7 +289,7 @@ describe("getConfigsFromReceiverSettings", () => {
 
     expect(configs).toEqual({
       LEDConfig: {
-        led: [{ name: "TOUCH", enable: 1, feedbackSoundsEnable: 1 }],
+        led: [{ enable: 1, feedbackSoundsEnable: 1, name: "TOUCH" }],
       },
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
@@ -449,7 +450,7 @@ describe("getConfigsFromReceiverSettings", () => {
     });
 
     expect(configs).toEqual({
-      LowLatencyConfig: { enabled: 0, delay: 0 },
+      LowLatencyConfig: { delay: 0, enabled: 0 },
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 
@@ -459,7 +460,7 @@ describe("getConfigsFromReceiverSettings", () => {
     });
 
     expect(configs).toEqual({
-      LowLatencyConfig: { enabled: 1, delay: 100 },
+      LowLatencyConfig: { delay: 100, enabled: 1 },
     } satisfies Partial<ConfigsFromReceiverSettings>);
   });
 });

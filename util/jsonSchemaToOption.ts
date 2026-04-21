@@ -1,28 +1,28 @@
 import * as v from "valibot";
 
 const stringEnumSchema = v.object({
-  type: v.literal("string"),
-  enum: v.array(v.string()),
   description: v.string(),
+  enum: v.array(v.string()),
+  type: v.literal("string"),
 });
 
 const numberEnumSchema = v.object({
-  type: v.literal("number"),
-  enum: v.array(v.number()),
   description: v.string(),
+  enum: v.array(v.number()),
+  type: v.literal("number"),
 });
 
 const stringOrNumberEnumSchema = v.object({
-  type: v.array(v.union([v.literal("string"), v.literal("number")])),
-  enum: v.array(v.union([v.string(), v.number()])),
   description: v.string(),
+  enum: v.array(v.union([v.string(), v.number()])),
+  type: v.array(v.union([v.literal("string"), v.literal("number")])),
 });
 
 const numberSchema = v.object({
-  type: v.literal("number"),
-  minimum: v.optional(v.number()),
-  maximum: v.optional(v.number()),
   description: v.string(),
+  maximum: v.optional(v.number()),
+  minimum: v.optional(v.number()),
+  type: v.literal("number"),
 });
 
 const jsonMetaSchema = v.union([
@@ -34,57 +34,19 @@ const jsonMetaSchema = v.union([
 
 export type JsonMetaSchema = v.InferOutput<typeof jsonMetaSchema>;
 
-export function parseAsJsonSchema(maybeJsonSchema: unknown): JsonMetaSchema {
-  return v.parse(jsonMetaSchema, maybeJsonSchema);
-}
+export type OptionDescriptor = {
+  argParser:
+    | ((value: string) => number)
+    | ((value: string) => number | string)
+    | undefined;
+  choices: string[] | undefined;
+  description: string;
+  flags: string;
+};
 
 type JsonSchemaToOption = {
   name: string;
   schema: JsonMetaSchema;
-};
-
-function stringOrNumberEnumParser(value: string): string | number {
-  const valueAsNumber = Number(value);
-
-  return Number.isNaN(valueAsNumber) ? value : valueAsNumber;
-}
-
-function getArgParser(type: "string" | "number" | ("string" | "number")[]) {
-  if (Array.isArray(type)) {
-    return stringOrNumberEnumParser;
-  }
-
-  return type === "number" ? Number : undefined;
-}
-
-function getChoices(values: Array<string | number>): string[] {
-  return values.map((value) => value.toString());
-}
-
-function getRangeText([min, max]: [number?, number?]): string | undefined {
-  if (min != null && max != null) {
-    return `[${min} to ${max}]`;
-  }
-
-  if (min != null) {
-    return `[down to ${min}]`;
-  }
-
-  if (max != null) {
-    return `[up to ${max}]`;
-  }
-
-  return undefined;
-}
-
-export type OptionDescriptor = {
-  flags: string;
-  description: string;
-  choices: string[] | undefined;
-  argParser:
-    | ((value: string) => number)
-    | ((value: string) => string | number)
-    | undefined;
 };
 
 export function jsonSchemaToOption({
@@ -104,9 +66,47 @@ export function jsonSchemaToOption({
     .join("\n\n");
 
   return {
-    flags: `--${name} <VALUE>`,
     argParser: getArgParser(schema.type),
     choices: "enum" in schema ? getChoices(schema.enum) : undefined,
     description,
+    flags: `--${name} <VALUE>`,
   };
+}
+
+export function parseAsJsonSchema(maybeJsonSchema: unknown): JsonMetaSchema {
+  return v.parse(jsonMetaSchema, maybeJsonSchema);
+}
+
+function getArgParser(type: "number" | "string" | ("number" | "string")[]) {
+  if (Array.isArray(type)) {
+    return stringOrNumberEnumParser;
+  }
+
+  return type === "number" ? Number : undefined;
+}
+
+function getChoices(values: Array<number | string>): string[] {
+  return values.map((value) => value.toString());
+}
+
+function getRangeText([min, max]: [number?, number?]): string | undefined {
+  if (min != null && max != null) {
+    return `[${min} to ${max}]`;
+  }
+
+  if (min != null) {
+    return `[down to ${min}]`;
+  }
+
+  if (max != null) {
+    return `[up to ${max}]`;
+  }
+
+  return undefined;
+}
+
+function stringOrNumberEnumParser(value: string): number | string {
+  const valueAsNumber = Number(value);
+
+  return Number.isNaN(valueAsNumber) ? value : valueAsNumber;
 }
