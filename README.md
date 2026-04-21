@@ -158,7 +158,7 @@ const renderingClient = createRenderingControlClient({
   output: console,
   socket,
   host,
-  pathname: "/RenderingControl/control",
+  pathname: "/upnp/control/renderer_dvc/RenderingControl",
   build: (data) => builder.build(data),
   parse: (data) => parser.parse(data),
 });
