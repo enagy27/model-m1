@@ -55,6 +55,7 @@
     "@valibot/to-json-schema": "^1.6.0",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-perfectionist": "^5.9.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
